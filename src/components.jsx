@@ -85,47 +85,60 @@ export function AdSenseUnit({ slot, className = "" }) {
       return;
     }
 
-    // Wait for AdSense script to fully load
-    const timer = setTimeout(() => {
-      // Check again in case of race condition
+    // Wait for AdSense script and window.adsbygoogle to be ready
+    let attempts = 0;
+    const maxAttempts = 50; // 50 attempts * 100ms = 5 seconds max wait
+
+    const checkAndInitialize = () => {
       if (pushed.current) {
-        logAd("Ad already pushed during timeout for slot:", slot);
+        logAd("Ad already pushed during check for slot:", slot);
         return;
       }
 
-      if (!window.adsbygoogle) {
+      attempts++;
+
+      // Check if adsbygoogle is ready
+      if (window.adsbygoogle && typeof window.adsbygoogle.push === 'function') {
+        // Mark as pushed BEFORE the actual push to prevent race conditions
+        pushed.current = true;
+
+        try {
+          logAd("Initializing ad unit:", {
+            slot,
+            publisherId: adsensePublisherId,
+            element: adRef.current,
+            attemptsNeeded: attempts,
+          });
+
+          // Push to AdSense (only happens once per component)
+          (window.adsbygoogle = window.adsbygoogle || []).push({});
+
+          logAd("✓ Ad unit push successful for slot:", slot);
+        } catch (error) {
+          console.error("[AdSense] Error initializing ad unit:", error);
+          console.error("Slot ID:", slot);
+          console.error("Publisher ID:", adsensePublisherId);
+          // Reset on error to allow retry
+          pushed.current = false;
+        }
+      } else if (attempts >= maxAttempts) {
+        // Give up after max attempts
         console.error(
-          "[AdSense] AdSense script not loaded. Possible causes:",
+          "[AdSense] AdSense script not ready after 5 seconds. Possible causes:",
           "\n1. Ad blocker is active",
           "\n2. Internet connection issue",
           "\n3. AdSense script failed to load",
-          "\n4. Publisher ID incorrect"
+          "\n4. Publisher ID incorrect:",
+          adsensePublisherId
         );
-        return;
+      } else {
+        // Try again in 100ms
+        setTimeout(checkAndInitialize, 100);
       }
+    };
 
-      // Mark as pushed BEFORE the actual push to prevent race conditions
-      pushed.current = true;
-
-      try {
-        logAd("Initializing ad unit:", {
-          slot,
-          publisherId: adsensePublisherId,
-          element: adRef.current,
-        });
-
-        // Push to AdSense (only happens once per component)
-        (window.adsbygoogle = window.adsbygoogle || []).push({});
-
-        logAd("✓ Ad unit push successful for slot:", slot);
-      } catch (error) {
-        console.error("[AdSense] Error initializing ad unit:", error);
-        console.error("Slot ID:", slot);
-        console.error("Publisher ID:", adsensePublisherId);
-        // Reset on error to allow retry
-        pushed.current = false;
-      }
-    }, 100);
+    // Start checking after initial delay
+    const timer = setTimeout(checkAndInitialize, 100);
 
     return () => {
       clearTimeout(timer);
