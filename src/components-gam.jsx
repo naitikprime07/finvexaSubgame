@@ -5,78 +5,38 @@ import { GAMAdUnit, GAMInterstitial } from "./gam-ads";
 const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
 const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
 
+let adSlotCounter = 0;
+
 // GAM Ad Slot for Home Page
 export function AdSlot({ className = "", label = "Advertisement" }) {
   const adUnitPath = import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
   const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
+  
+  // Use stable slot ID with useRef
+  const slotIdRef = useRef(`gam-home-top-${++adSlotCounter}`);
 
   if (!live) return null;
 
-  const slotId = `gam-home-top-${Date.now()}`;
-
   return (
     <div className={`ad-space ${className}`} aria-label={label}>
-      <GAMAdUnit adUnitPath={adUnitPath} slotId={slotId} />
+      <GAMAdUnit adUnitPath={adUnitPath} slotId={slotIdRef.current} />
     </div>
   );
 }
 
-// Interstitial Ad using GAM
+/**
+ * InterstitialAd - Wrapper for GAM interstitial
+ * Note: GAM interstitials create their own full-page overlay
+ * This component just triggers the interstitial load
+ */
 export function InterstitialAd() {
-  const { pathname, key: routeKey } = useLocation();
-  const detailRoute =
-    /^\/en\/(carFinance|healthFinance)\/[^/]+(?:\/index\.html)?\/?$/i.test(pathname);
-
-  const [open, setOpen] = useState(
-    () =>
-      detailRoute ||
-      sessionStorage.getItem("finvexo-vignette-seen-v2") !== "true"
-  );
-
   const interstitialPath = import.meta.env.VITE_AD_INTERSTITIAL || "";
   const liveAds = adsEnabled && Boolean(gamNetworkCode) && Boolean(interstitialPath);
-  const mountedRoute = useRef(false);
 
-  useEffect(() => {
-    if (detailRoute) setOpen(true);
-    else if (mountedRoute.current) setOpen(false);
-    mountedRoute.current = true;
-  }, [pathname, routeKey, detailRoute]);
+  if (!liveAds) return null;
 
-  useEffect(() => {
-    if (!open) return undefined;
-    document.documentElement.classList.add("interstitial-open");
-    const closeOnEscape = (event) => {
-      if (event.key === "Escape") setOpen(false);
-    };
-    window.addEventListener("keydown", closeOnEscape);
-    return () => {
-      document.documentElement.classList.remove("interstitial-open");
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [open]);
-
-  const closeAd = () => {
-    sessionStorage.setItem("finvexo-vignette-seen-v2", "true");
-    document.documentElement.classList.remove("interstitial-open");
-    setOpen(false);
-  };
-
-  if (!liveAds || !open) return null;
-
-  return (
-    <div className="interstitial-backdrop" onClick={closeAd}>
-      <div className="interstitial-ad" onClick={(e) => e.stopPropagation()}>
-        <button className="interstitial-close" onClick={closeAd} aria-label="Close advertisement">
-          ×
-        </button>
-        <div className="interstitial-label">Advertisement</div>
-        <div className="interstitial-slot">
-          <GAMInterstitial adUnitPath={interstitialPath} slotId="gam-interstitial" />
-        </div>
-      </div>
-    </div>
-  );
+  // GAMInterstitial handles everything - just pass the ad unit path
+  return <GAMInterstitial adUnitPath={interstitialPath} />;
 }
 
 export function StickyVisual() {

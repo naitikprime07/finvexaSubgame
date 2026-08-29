@@ -3,7 +3,10 @@
     "allow": [
       "Bash(npm run build)",
       "Bash(cat \"d:\\Game Web\\src\\gam-ads.jsx\")",
-      "Bash(git add .)"
+      "Bash(git add .)",
+      "Bash(cat \"d:\\Game Web\\src\\components-gam.jsx\")",
+      "Bash(cat \"d:\\Game Web\\index.html\")",
+      "Bash(cat games.jsx)"
     ],
     "deny": [],
     "ask": []

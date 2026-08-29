@@ -122,9 +122,13 @@ function GameAd({ name }) {
   const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
   const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
 
-  if (!live) return null;
+  // Use stable slot ID with useRef - generates ID once on mount
+  const slotIdRef = useRef();
+  if (!slotIdRef.current) {
+    slotIdRef.current = `gam-${name}-${Math.random().toString(36).substr(2, 9)}`;
+  }
 
-  const slotId = `gam-${name}-${Date.now()}`;
+  if (!live) return null;
 
   return (
     <aside
@@ -137,7 +141,7 @@ function GameAd({ name }) {
         data-desktop-size="970x90"
         data-mobile-size={largeMobileSlot ? "336x280" : "320x100"}
       >
-        <GAMAdUnit adUnitPath={adUnitPath} slotId={slotId} />
+        <GAMAdUnit adUnitPath={adUnitPath} slotId={slotIdRef.current} />
       </div>
     </aside>
   );
