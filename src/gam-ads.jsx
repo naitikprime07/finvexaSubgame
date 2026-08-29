@@ -8,14 +8,14 @@ const logAd = (...args) => {
   if (debugMode) console.log("[GAM]", ...args);
 };
 
+let gptInitialized = false;
+
 // Load Google Publisher Tag (GPT)
 export function GPTLoader() {
   useEffect(() => {
-    if (!adsEnabled || !gamNetworkCode) {
-      logAd("Ads disabled or no network code");
-      return;
-    }
+    if (!adsEnabled || !gamNetworkCode || gptInitialized) return;
 
+    gptInitialized = true;
     window.googletag = window.googletag || { cmd: [] };
 
     if (document.querySelector('script[src*="gpt.js"]')) {
@@ -28,12 +28,10 @@ export function GPTLoader() {
     script.src = "https://securepubads.g.doubleclick.net/tag/js/gpt.js";
 
     script.onload = () => {
-      logAd("GPT loaded");
       googletag.cmd.push(() => {
-        googletag.pubads().enableSingleRequest();
         googletag.pubads().collapseEmptyDivs();
         googletag.enableServices();
-        logAd("GPT services enabled");
+        logAd("GPT ready");
       });
     };
 
@@ -46,74 +44,72 @@ export function GPTLoader() {
 // GAM Ad Unit Component
 export function GAMAdUnit({ adUnitPath, slotId, sizes = [[728, 90], [970, 90], [320, 50], [300, 250]] }) {
   const slotRef = useRef(null);
-  const initialized = useRef(false);
 
   useEffect(() => {
-    if (!adsEnabled || !gamNetworkCode || !adUnitPath || initialized.current) {
-      return;
-    }
-
-    initialized.current = true;
+    if (!adsEnabled || !gamNetworkCode || !adUnitPath) return;
 
     window.googletag = window.googletag || { cmd: [] };
 
     googletag.cmd.push(() => {
-      try {
-        slotRef.current = googletag
-          .defineSlot(adUnitPath, sizes, slotId)
-          .addService(googletag.pubads());
-
-        googletag.display(slotId);
-        googletag.pubads().refresh([slotRef.current]);
-
-        logAd("Ad loaded:", slotId, adUnitPath);
-      } catch (e) {
-        console.error("[GAM] Error:", e);
+      if (slotRef.current) {
+        googletag.destroySlots([slotRef.current]);
       }
+
+      slotRef.current = googletag
+        .defineSlot(adUnitPath, sizes, slotId)
+        .addService(googletag.pubads());
+
+      googletag.display(slotId);
+      logAd("Ad shown:", slotId);
     });
 
     return () => {
       if (slotRef.current) {
         googletag.cmd.push(() => {
           googletag.destroySlots([slotRef.current]);
-          logAd("Ad destroyed:", slotId);
+          slotRef.current = null;
         });
       }
     };
-  }, [adUnitPath, slotId]);
+  }, []); // Empty array - only run once on mount
 
   if (!adsEnabled || !adUnitPath) return null;
 
-  return <div id={slotId} style={{ minHeight: "90px", textAlign: "center" }}></div>;
+  return (
+    <div
+      id={slotId}
+      style={{
+        minHeight: "90px",
+        minWidth: "320px",
+        textAlign: "center",
+        background: "#f9f9f9",
+        margin: "10px auto"
+      }}
+    ></div>
+  );
 }
 
 // Interstitial Ad (Out-of-Page)
 export function GAMInterstitial({ adUnitPath, slotId }) {
   const slotRef = useRef(null);
-  const initialized = useRef(false);
 
   useEffect(() => {
-    if (!adsEnabled || !gamNetworkCode || !adUnitPath || initialized.current) {
-      return;
-    }
-
-    initialized.current = true;
+    if (!adsEnabled || !gamNetworkCode || !adUnitPath) return;
 
     window.googletag = window.googletag || { cmd: [] };
 
     googletag.cmd.push(() => {
-      try {
-        slotRef.current = googletag
-          .defineOutOfPageSlot(adUnitPath, googletag.enums.OutOfPageFormat.INTERSTITIAL)
-          .addService(googletag.pubads());
+      if (slotRef.current) {
+        googletag.destroySlots([slotRef.current]);
+      }
 
-        if (slotRef.current) {
-          slotRef.current.addService(googletag.pubads());
-          googletag.display(slotId);
-          logAd("Interstitial loaded:", slotId);
-        }
-      } catch (e) {
-        console.error("[GAM] Interstitial error:", e);
+      slotRef.current = googletag
+        .defineOutOfPageSlot(adUnitPath, googletag.enums.OutOfPageFormat.INTERSTITIAL);
+
+      if (slotRef.current) {
+        slotRef.current.addService(googletag.pubads());
+        googletag.display(slotId);
+        logAd("Interstitial shown:", slotId);
       }
     });
 
@@ -121,12 +117,13 @@ export function GAMInterstitial({ adUnitPath, slotId }) {
       if (slotRef.current) {
         googletag.cmd.push(() => {
           googletag.destroySlots([slotRef.current]);
+          slotRef.current = null;
         });
       }
     };
-  }, [adUnitPath, slotId]);
+  }, []); // Empty array - only run once on mount
 
   if (!adsEnabled || !adUnitPath) return null;
 
-  return <div id={slotId}></div>;
+  return <div id={slotId} style={{ display: "none" }}></div>;
 }
