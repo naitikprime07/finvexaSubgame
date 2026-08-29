@@ -68,7 +68,8 @@ export function InterstitialAd() {
       sessionStorage.getItem("finvexo-vignette-seen-v2") !== "true"
   );
 
-  const [adEmpty, setAdEmpty] = useState(false);
+  const [adEmpty, setAdEmpty] = useState(null); // null = loading, true = empty, false = filled
+  const [showOverlay, setShowOverlay] = useState(false);
 
   const interstitialPath = import.meta.env.VITE_AD_INTERSTITIAL || "";
   const liveAds = adsEnabled && Boolean(gamNetworkCode) && Boolean(interstitialPath);
@@ -83,37 +84,60 @@ export function InterstitialAd() {
     mountedRoute.current = true;
   }, [pathname, routeKey, detailRoute]);
 
+  // Handle ad state changes
+  const handleAdStateChange = (isEmpty) => {
+    setAdEmpty(isEmpty);
+
+    if (isEmpty) {
+      // Ad is empty - close overlay and mark as seen
+      sessionStorage.setItem("finvexo-vignette-seen-v2", "true");
+      setOpen(false);
+      setShowOverlay(false);
+    } else {
+      // Ad loaded successfully - show overlay
+      setShowOverlay(true);
+    }
+  };
+
   useEffect(() => {
-    if (!open) return undefined;
+    if (!open || !showOverlay) return undefined;
     document.documentElement.classList.add("interstitial-open");
     const closeOnEscape = (event) => {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        closeAd();
+      }
     };
     window.addEventListener("keydown", closeOnEscape);
     return () => {
       document.documentElement.classList.remove("interstitial-open");
       window.removeEventListener("keydown", closeOnEscape);
     };
-  }, [open]);
+  }, [open, showOverlay]);
 
   const closeAd = () => {
     sessionStorage.setItem("finvexo-vignette-seen-v2", "true");
     document.documentElement.classList.remove("interstitial-open");
     setOpen(false);
+    setShowOverlay(false);
   };
 
-  // Close overlay if ad is empty
-  useEffect(() => {
-    if (adEmpty && open) {
-      closeAd();
-    }
-  }, [adEmpty]);
-
+  // Don't render anything if not enabled
   if (!liveAds || !open) return null;
 
-  // Don't show overlay if ad is empty
-  if (adEmpty) return null;
+  // Render ad request in hidden container while checking if it fills
+  if (!showOverlay) {
+    return (
+      <div style={{ display: 'none' }}>
+        <GAMInterstitial
+          adUnitPath={interstitialPath}
+          slotId={slotIdRef.current}
+          onEmptyStateChange={handleAdStateChange}
+        />
+      </div>
+    );
+  }
 
+  // Ad loaded successfully - show overlay
   return (
     <div className="interstitial-backdrop" onClick={closeAd}>
       <div className="interstitial-ad" onClick={(e) => e.stopPropagation()}>
@@ -122,10 +146,10 @@ export function InterstitialAd() {
         </button>
         <div className="interstitial-label">Advertisement</div>
         <div className="interstitial-slot">
-          <GAMInterstitial 
-            adUnitPath={interstitialPath} 
+          <GAMInterstitial
+            adUnitPath={interstitialPath}
             slotId={slotIdRef.current}
-            onEmptyStateChange={setAdEmpty}
+            onEmptyStateChange={handleAdStateChange}
           />
         </div>
       </div>
