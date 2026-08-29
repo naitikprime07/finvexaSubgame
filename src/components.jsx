@@ -293,7 +293,9 @@ export function InterstitialAd() {
       detailRoute ||
       sessionStorage.getItem("finvexo-vignette-seen-v2") !== "true",
   );
-  const liveAds = adsEnabled && Boolean(adsensePublisherId);
+
+  const interstitialSlot = import.meta.env.VITE_AD_INTERSTITIAL || "";
+  const liveAds = adsEnabled && Boolean(adsensePublisherId) && Boolean(interstitialSlot);
   const mountedRoute = useRef(false);
 
   useEffect(() => {
@@ -321,7 +323,20 @@ export function InterstitialAd() {
     setOpen(false);
   };
 
-  // No interstitial ads shown when AdSense is disabled
-  // When enabled, interstitial ads are managed through AdSense dashboard (Auto ads)
-  return null;
+  // Don't show interstitial if ads disabled or no slot ID
+  if (!liveAds || !open) return null;
+
+  return (
+    <div className="interstitial-backdrop" onClick={closeAd}>
+      <div className="interstitial-ad" onClick={(e) => e.stopPropagation()}>
+        <button className="interstitial-close" onClick={closeAd} aria-label="Close advertisement">
+          ×
+        </button>
+        <div className="interstitial-label">Advertisement</div>
+        <div className="interstitial-slot">
+          <AdSenseUnit slot={interstitialSlot} className="interstitial-ad-unit" />
+        </div>
+      </div>
+    </div>
+  );
 }
