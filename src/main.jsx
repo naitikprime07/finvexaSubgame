@@ -9,12 +9,27 @@ import { GPTLoader } from "./gam-ads";
 
 // Suppress harmless third-party script errors (web-vitals, extensions, etc.)
 window.addEventListener("error", (event) => {
-  // Ignore web-vitals library errors from browser extensions
+  // Ignore web-vitals library errors from browser extensions and ad scripts
   if (
     event.message &&
     (event.message.includes("reportAllChanges") ||
       event.message.includes("startTime") ||
-      event.filename?.includes("chrome-extension://"))
+      event.message.includes("web-vitals") ||
+      event.filename?.includes("chrome-extension://") ||
+      event.filename?.startsWith("VM"))
+  ) {
+    event.preventDefault();
+    event.stopPropagation();
+    return false;
+  }
+});
+
+// Also suppress unhandled promise rejections from third-party scripts
+window.addEventListener("unhandledrejection", (event) => {
+  if (
+    event.reason?.message?.includes("reportAllChanges") ||
+    event.reason?.message?.includes("startTime") ||
+    event.reason?.message?.includes("web-vitals")
   ) {
     event.preventDefault();
     return false;
