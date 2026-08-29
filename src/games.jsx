@@ -109,6 +109,7 @@ const infoPages = {
   },
 };
 function GameAd({ name }) {
+  const [adLoaded, setAdLoaded] = useState(false);
   const largeMobileSlot = name === "top" || name === "detail-top";
   const slots = {
     top: import.meta.env.VITE_AD_BANNER_CATALOG_TOP || "",
@@ -130,6 +131,19 @@ function GameAd({ name }) {
 
   if (!live) return null;
 
+  // Don't render wrapper until ad loads
+  if (!adLoaded) {
+    return (
+      <div style={{ display: 'none' }}>
+        <GAMAdUnit
+          adUnitPath={adUnitPath}
+          slotId={slotIdRef.current}
+          onAdStateChange={(state) => setAdLoaded(state === 'filled')}
+        />
+      </div>
+    );
+  }
+
   return (
     <aside
       className={`game-ad ${largeMobileSlot ? "game-ad-large" : "game-ad-banner"}`}
@@ -141,7 +155,11 @@ function GameAd({ name }) {
         data-desktop-size="970x90"
         data-mobile-size={largeMobileSlot ? "336x280" : "320x100"}
       >
-        <GAMAdUnit adUnitPath={adUnitPath} slotId={slotIdRef.current} />
+        <GAMAdUnit
+          adUnitPath={adUnitPath}
+          slotId={slotIdRef.current}
+          onAdStateChange={(state) => setAdLoaded(state === 'filled')}
+        />
       </div>
     </aside>
   );

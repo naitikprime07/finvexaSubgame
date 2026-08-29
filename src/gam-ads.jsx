@@ -29,7 +29,8 @@ export function GPTLoader() {
 
     script.onload = () => {
       googletag.cmd.push(() => {
-        googletag.pubads().collapseEmptyDivs();
+        // Collapse empty divs immediately (before ad request)
+        googletag.pubads().collapseEmptyDivs(true);
         googletag.enableServices();
         logAd("GPT ready");
       });
@@ -41,18 +42,22 @@ export function GPTLoader() {
   return null;
 }
 
-// GAM Ad Unit Component with empty state handling
-export function GAMAdUnit({ 
-  adUnitPath, 
-  slotId, 
-  sizes = [[728, 90], [970, 90], [320, 50], [300, 250]] 
+// GAM Ad Unit Component with proper empty state handling
+export function GAMAdUnit({
+  adUnitPath,
+  slotId,
+  sizes = [[728, 90], [970, 90], [320, 50], [300, 250]],
+  onAdStateChange
 }) {
   const slotRef = useRef(null);
-  const [isEmpty, setIsEmpty] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [adState, setAdState] = useState('loading'); // 'loading' | 'filled' | 'empty'
 
   useEffect(() => {
-    if (!adsEnabled || !gamNetworkCode || !adUnitPath) return;
+    if (!adsEnabled || !gamNetworkCode || !adUnitPath) {
+      setAdState('empty');
+      if (onAdStateChange) onAdStateChange('empty');
+      return;
+    }
 
     window.googletag = window.googletag || { cmd: [] };
 
@@ -65,23 +70,22 @@ export function GAMAdUnit({
         .defineSlot(adUnitPath, sizes, slotId)
         .addService(googletag.pubads());
 
-      // Listen for slot render event to detect empty slots
-      const renderListener = googletag.pubads().addEventListener('slotRenderEnded', (event) => {
+      // Listen for slot render event BEFORE displaying
+      googletag.pubads().addEventListener('slotRenderEnded', (event) => {
         if (event.slot === slotRef.current) {
           if (event.isEmpty) {
-            logAd("Ad slot empty:", slotId);
-            setIsEmpty(true);
-            setIsLoaded(true);
+            logAd("Ad empty:", slotId);
+            setAdState('empty');
+            if (onAdStateChange) onAdStateChange('empty');
           } else {
-            logAd("Ad loaded:", slotId);
-            setIsEmpty(false);
-            setIsLoaded(true);
+            logAd("Ad filled:", slotId);
+            setAdState('filled');
+            if (onAdStateChange) onAdStateChange('filled');
           }
         }
       });
 
       googletag.display(slotId);
-      logAd("Ad requested:", slotId);
     });
 
     return () => {
@@ -94,22 +98,21 @@ export function GAMAdUnit({
     };
   }, []);
 
-  if (!adsEnabled || !adUnitPath) return null;
-
-  // Don't render anything if ad is empty
-  if (isEmpty) return null;
+  // Don't render anything if not enabled or empty
+  if (!adsEnabled || !adUnitPath || adState === 'empty') {
+    return null;
+  }
 
   return (
     <div
       id={slotId}
       style={{
-        minHeight: isLoaded ? "auto" : "90px",
-        minWidth: "320px",
-        textAlign: "center",
-        background: isLoaded ? "transparent" : "#f9f9f9",
-        margin: "10px auto",
-        opacity: isLoaded ? 1 : 0.5,
-        transition: "opacity 0.3s ease"
+        display: adState === 'filled' ? 'block' : 'none',
+        minHeight: 'auto',
+        minWidth: 'auto',
+        textAlign: 'center',
+        margin: '10px auto',
+        overflow: 'hidden'
       }}
     ></div>
   );
@@ -118,11 +121,14 @@ export function GAMAdUnit({
 // Interstitial Ad - Uses custom overlay with standard ad slot
 export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
   const slotRef = useRef(null);
-  const [isEmpty, setIsEmpty] = useState(false);
-  const [isLoaded, setIsLoaded] = useState(false);
+  const [adState, setAdState] = useState('loading'); // 'loading' | 'filled' | 'empty'
 
   useEffect(() => {
-    if (!adsEnabled || !gamNetworkCode || !adUnitPath) return;
+    if (!adsEnabled || !gamNetworkCode || !adUnitPath) {
+      setAdState('empty');
+      if (onEmptyStateChange) onEmptyStateChange(true);
+      return;
+    }
 
     window.googletag = window.googletag || { cmd: [] };
 
@@ -131,30 +137,27 @@ export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
         googletag.destroySlots([slotRef.current]);
       }
 
-      // Define as regular display ad (not out-of-page)
+      // Define as regular display ad
       slotRef.current = googletag
         .defineSlot(adUnitPath, [[300, 250], [336, 280], [320, 480]], slotId)
         .addService(googletag.pubads());
 
       // Listen for slot render event
-      const renderListener = googletag.pubads().addEventListener('slotRenderEnded', (event) => {
+      googletag.pubads().addEventListener('slotRenderEnded', (event) => {
         if (event.slot === slotRef.current) {
           if (event.isEmpty) {
-            logAd("Interstitial slot empty:", slotId);
-            setIsEmpty(true);
-            setIsLoaded(true);
+            logAd("Interstitial empty:", slotId);
+            setAdState('empty');
             if (onEmptyStateChange) onEmptyStateChange(true);
           } else {
-            logAd("Interstitial loaded:", slotId);
-            setIsEmpty(false);
-            setIsLoaded(true);
+            logAd("Interstitial filled:", slotId);
+            setAdState('filled');
             if (onEmptyStateChange) onEmptyStateChange(false);
           }
         }
       });
 
       googletag.display(slotId);
-      logAd("Interstitial requested:", slotId);
     });
 
     return () => {
@@ -167,21 +170,20 @@ export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
     };
   }, []);
 
-  if (!adsEnabled || !adUnitPath) return null;
-
-  // Don't render container if ad is empty
-  if (isEmpty) return null;
+  if (!adsEnabled || !adUnitPath || adState === 'empty') {
+    return null;
+  }
 
   return (
     <div
       id={slotId}
       style={{
-        minHeight: isLoaded ? "auto" : "250px",
-        minWidth: "300px",
-        textAlign: "center",
-        margin: "0 auto",
-        opacity: isLoaded ? 1 : 0.5,
-        transition: "opacity 0.3s ease"
+        display: adState === 'filled' ? 'block' : 'none',
+        minHeight: 'auto',
+        minWidth: 'auto',
+        textAlign: 'center',
+        margin: '0 auto',
+        overflow: 'hidden'
       }}
     ></div>
   );

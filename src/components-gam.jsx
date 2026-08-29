@@ -9,17 +9,35 @@ let adSlotCounter = 0;
 
 // GAM Ad Slot for Home Page
 export function AdSlot({ className = "", label = "Advertisement" }) {
+  const [adLoaded, setAdLoaded] = useState(false);
   const adUnitPath = import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
   const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
-  
+
   // Use stable slot ID with useRef
   const slotIdRef = useRef(`gam-home-top-${++adSlotCounter}`);
 
   if (!live) return null;
 
+  // Don't render wrapper until ad loads
+  if (!adLoaded) {
+    return (
+      <div style={{ display: 'none' }}>
+        <GAMAdUnit
+          adUnitPath={adUnitPath}
+          slotId={slotIdRef.current}
+          onAdStateChange={(state) => setAdLoaded(state === 'filled')}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className={`ad-space ${className}`} aria-label={label}>
-      <GAMAdUnit adUnitPath={adUnitPath} slotId={slotIdRef.current} />
+      <GAMAdUnit
+        adUnitPath={adUnitPath}
+        slotId={slotIdRef.current}
+        onAdStateChange={(state) => setAdLoaded(state === 'filled')}
+      />
     </div>
   );
 }
