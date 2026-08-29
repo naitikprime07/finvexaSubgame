@@ -109,7 +109,7 @@ const infoPages = {
   },
 };
 function GameAd({ name }) {
-  const [adLoaded, setAdLoaded] = useState(false);
+  const [adState, setAdState] = useState('loading'); // 'loading' | 'filled' | 'empty'
   const largeMobileSlot = name === "top" || name === "detail-top";
   const slots = {
     top: import.meta.env.VITE_AD_BANNER_CATALOG_TOP || "",
@@ -152,21 +152,16 @@ function GameAd({ name }) {
   // Combine mobile-first (mobile sizes first for better mobile ad fill)
   const adSizes = [...mobileSizes, ...desktopSizes];
 
-  // Render ad request in hidden div (don't render wrapper yet)
-  if (!adLoaded) {
-    return (
-      <div style={{ display: "none" }}>
-        <GAMAdUnit
-          adUnitPath={adUnitPath}
-          slotId={slotIdRef.current}
-          sizes={adSizes}
-          onAdStateChange={(state) => setAdLoaded(state === "filled")}
-        />
-      </div>
-    );
+  const handleAdStateChange = (state) => {
+    setAdState(state);
+  };
+
+  // Don't show anything if ad is empty
+  if (adState === 'empty') {
+    return null;
   }
 
-  // Ad loaded - show wrapper with visible ADVERTISEMENT label
+  // Show wrapper with ADVERTISEMENT label (always visible when not empty)
   return (
     <aside
       className={`game-ad ${largeMobileSlot ? "game-ad-large" : "game-ad-banner"}`}
@@ -182,7 +177,7 @@ function GameAd({ name }) {
           adUnitPath={adUnitPath}
           slotId={slotIdRef.current}
           sizes={adSizes}
-          onAdStateChange={(state) => setAdLoaded(state === "filled")}
+          onAdStateChange={handleAdStateChange}
         />
       </div>
     </aside>

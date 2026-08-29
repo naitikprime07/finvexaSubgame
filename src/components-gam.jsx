@@ -9,7 +9,7 @@ let adSlotCounter = 0;
 
 // GAM Ad Slot for Home Page
 export function AdSlot({ className = "", label = "Advertisement" }) {
-  const [adLoaded, setAdLoaded] = useState(false);
+  const [adState, setAdState] = useState('loading'); // 'loading' | 'filled' | 'empty'
   const adUnitPath = import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
   const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
 
@@ -30,18 +30,13 @@ export function AdSlot({ className = "", label = "Advertisement" }) {
 
   if (!live) return null;
 
-  // Don't render wrapper until ad loads
-  if (!adLoaded) {
-    return (
-      <div style={{ display: 'none' }}>
-        <GAMAdUnit
-          adUnitPath={adUnitPath}
-          slotId={slotIdRef.current}
-          sizes={adSizes}
-          onAdStateChange={(state) => setAdLoaded(state === 'filled')}
-        />
-      </div>
-    );
+  const handleAdStateChange = (state) => {
+    setAdState(state);
+  };
+
+  // Don't show anything if ad is empty
+  if (adState === 'empty') {
+    return null;
   }
 
   return (
@@ -51,7 +46,7 @@ export function AdSlot({ className = "", label = "Advertisement" }) {
         adUnitPath={adUnitPath}
         slotId={slotIdRef.current}
         sizes={adSizes}
-        onAdStateChange={(state) => setAdLoaded(state === 'filled')}
+        onAdStateChange={handleAdStateChange}
       />
     </div>
   );

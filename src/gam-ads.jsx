@@ -3,6 +3,11 @@ import { useEffect, useRef, useState } from "react";
 const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
 const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
 const debugMode = import.meta.env.VITE_ADS_DEBUG === "true";
+const testMode = import.meta.env.VITE_ADS_TEST_MODE === "true";
+
+// Google's test ad network (always fills - for testing implementation only)
+const TEST_NETWORK_CODE = "6355419";
+const TEST_AD_UNIT = "/6355419/Travel/Europe/France/Paris";
 
 const logAd = (...args) => {
   if (debugMode) console.log("[GAM]", ...args);
@@ -13,7 +18,9 @@ let gptInitialized = false;
 // Load Google Publisher Tag (GPT)
 export function GPTLoader() {
   useEffect(() => {
-    if (!adsEnabled || !gamNetworkCode || gptInitialized) return;
+    const activeNetworkCode = testMode ? TEST_NETWORK_CODE : gamNetworkCode;
+
+    if (!adsEnabled || !activeNetworkCode || gptInitialized) return;
 
     gptInitialized = true;
     window.googletag = window.googletag || { cmd: [] };
@@ -29,11 +36,19 @@ export function GPTLoader() {
 
     script.onload = () => {
       googletag.cmd.push(() => {
-        // Collapse empty divs immediately (before ad request)
-        googletag.pubads().collapseEmptyDivs(true);
+        // Use new API instead of deprecated collapseEmptyDivs
+        googletag.pubads().set('page_url', window.location.href);
         googletag.enableServices();
-        logAd("GPT ready");
+        if (testMode) {
+          logAd("⚠️ GPT ready - TEST MODE - Network:", activeNetworkCode, "| Test ads will always fill");
+        } else {
+          logAd("GPT ready - Network:", activeNetworkCode);
+        }
       });
+    };
+
+    script.onerror = () => {
+      logAd("Failed to load GPT script");
     };
 
     document.head.appendChild(script);
@@ -50,10 +65,14 @@ export function GAMAdUnit({
   onAdStateChange
 }) {
   const slotRef = useRef(null);
+  const listenerRef = useRef(null);
   const [adState, setAdState] = useState('loading'); // 'loading' | 'filled' | 'empty'
 
   useEffect(() => {
-    if (!adsEnabled || !gamNetworkCode || !adUnitPath) {
+    const activeNetworkCode = testMode ? TEST_NETWORK_CODE : gamNetworkCode;
+    const activeAdUnit = testMode ? TEST_AD_UNIT : adUnitPath;
+
+    if (!adsEnabled || !activeNetworkCode || !activeAdUnit) {
       setAdState('empty');
       if (onAdStateChange) onAdStateChange('empty');
       return;
@@ -62,47 +81,55 @@ export function GAMAdUnit({
     window.googletag = window.googletag || { cmd: [] };
 
     googletag.cmd.push(() => {
+      // Clean up existing slot if any
       if (slotRef.current) {
         googletag.destroySlots([slotRef.current]);
       }
 
+      // Define new slot
       slotRef.current = googletag
-        .defineSlot(adUnitPath, sizes, slotId)
+        .defineSlot(activeAdUnit, sizes, slotId)
         .addService(googletag.pubads());
 
-      // Listen for slot render event BEFORE displaying
-      googletag.pubads().addEventListener('slotRenderEnded', (event) => {
+      // Create event listener function
+      listenerRef.current = (event) => {
         if (event.slot === slotRef.current) {
           if (event.isEmpty) {
-            logAd("Ad empty:", slotId);
+            logAd("Ad empty:", slotId, "| Path:", activeAdUnit);
             setAdState('empty');
             if (onAdStateChange) onAdStateChange('empty');
           } else {
-            logAd("Ad filled:", slotId);
+            logAd("Ad filled:", slotId, "| Size:", event.size, "| Path:", activeAdUnit);
             setAdState('filled');
             if (onAdStateChange) onAdStateChange('filled');
           }
         }
-      });
+      };
 
+      // Add event listener
+      googletag.pubads().addEventListener('slotRenderEnded', listenerRef.current);
+
+      // Display the ad
       googletag.display(slotId);
     });
 
     return () => {
-      if (slotRef.current) {
-        googletag.cmd.push(() => {
+      googletag.cmd.push(() => {
+        // Remove event listener
+        if (listenerRef.current) {
+          googletag.pubads().removeEventListener('slotRenderEnded', listenerRef.current);
+          listenerRef.current = null;
+        }
+        // Destroy slot
+        if (slotRef.current) {
           googletag.destroySlots([slotRef.current]);
           slotRef.current = null;
-        });
-      }
+        }
+      });
     };
   }, []);
 
-  // Don't render anything if not enabled or empty
-  if (!adsEnabled || !adUnitPath || adState === 'empty') {
-    return null;
-  }
-
+  // Return container div that GPT needs
   return (
     <div
       id={slotId}
@@ -121,10 +148,14 @@ export function GAMAdUnit({
 // Interstitial Ad - Uses custom overlay with standard ad slot
 export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
   const slotRef = useRef(null);
+  const listenerRef = useRef(null);
   const [adState, setAdState] = useState('loading'); // 'loading' | 'filled' | 'empty'
 
   useEffect(() => {
-    if (!adsEnabled || !gamNetworkCode || !adUnitPath) {
+    const activeNetworkCode = testMode ? TEST_NETWORK_CODE : gamNetworkCode;
+    const activeAdUnit = testMode ? TEST_AD_UNIT : adUnitPath;
+
+    if (!adsEnabled || !activeNetworkCode || !activeAdUnit) {
       setAdState('empty');
       if (onEmptyStateChange) onEmptyStateChange(true);
       return;
@@ -133,6 +164,7 @@ export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
     window.googletag = window.googletag || { cmd: [] };
 
     googletag.cmd.push(() => {
+      // Clean up existing slot
       if (slotRef.current) {
         googletag.destroySlots([slotRef.current]);
       }
@@ -148,40 +180,46 @@ export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
       ];
 
       slotRef.current = googletag
-        .defineSlot(adUnitPath, interstitialSizes, slotId)
+        .defineSlot(activeAdUnit, interstitialSizes, slotId)
         .addService(googletag.pubads());
 
-      // Listen for slot render event
-      googletag.pubads().addEventListener('slotRenderEnded', (event) => {
+      // Create event listener
+      listenerRef.current = (event) => {
         if (event.slot === slotRef.current) {
           if (event.isEmpty) {
-            logAd("Interstitial empty:", slotId);
+            logAd("Interstitial empty:", slotId, "| Path:", activeAdUnit);
             setAdState('empty');
             if (onEmptyStateChange) onEmptyStateChange(true);
           } else {
-            logAd("Interstitial filled:", slotId);
+            logAd("Interstitial filled:", slotId, "| Size:", event.size, "| Path:", activeAdUnit);
             setAdState('filled');
             if (onEmptyStateChange) onEmptyStateChange(false);
           }
         }
-      });
+      };
 
+      // Add event listener
+      googletag.pubads().addEventListener('slotRenderEnded', listenerRef.current);
+
+      // Display the ad
       googletag.display(slotId);
     });
 
     return () => {
-      if (slotRef.current) {
-        googletag.cmd.push(() => {
+      googletag.cmd.push(() => {
+        // Remove event listener
+        if (listenerRef.current) {
+          googletag.pubads().removeEventListener('slotRenderEnded', listenerRef.current);
+          listenerRef.current = null;
+        }
+        // Destroy slot
+        if (slotRef.current) {
           googletag.destroySlots([slotRef.current]);
           slotRef.current = null;
-        });
-      }
+        }
+      });
     };
   }, []);
-
-  if (!adsEnabled || !adUnitPath || adState === 'empty') {
-    return null;
-  }
 
   return (
     <div
