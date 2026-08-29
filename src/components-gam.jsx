@@ -46,6 +46,7 @@ export function AdSlot({ className = "", label = "Advertisement" }) {
 
   return (
     <div className={`ad-space ${className}`} aria-label={label}>
+      <div className="ad-label-visible">ADVERTISEMENT</div>
       <GAMAdUnit
         adUnitPath={adUnitPath}
         slotId={slotIdRef.current}

@@ -152,7 +152,7 @@ function GameAd({ name }) {
   // Combine mobile-first (mobile sizes first for better mobile ad fill)
   const adSizes = [...mobileSizes, ...desktopSizes];
 
-  // Don't render wrapper until ad loads
+  // Render ad request in hidden div (don't render wrapper yet)
   if (!adLoaded) {
     return (
       <div style={{ display: "none" }}>
@@ -166,12 +166,13 @@ function GameAd({ name }) {
     );
   }
 
+  // Ad loaded - show wrapper with visible ADVERTISEMENT label
   return (
     <aside
       className={`game-ad ${largeMobileSlot ? "game-ad-large" : "game-ad-banner"}`}
       aria-label="Advertisement"
     >
-      <div className="ad-label">Advertisement</div>
+      <div className="ad-label-visible">ADVERTISEMENT</div>
       <div
         className="ad-slot-frame"
         data-desktop-size="970x90"
