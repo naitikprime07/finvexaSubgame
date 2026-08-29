@@ -9,6 +9,7 @@ const logAd = (...args) => {
 };
 
 let gptInitialized = false;
+let interstitialSlot = null;
 
 // Load Google Publisher Tag (GPT)
 export function GPTLoader() {
@@ -29,9 +30,7 @@ export function GPTLoader() {
 
     script.onload = () => {
       googletag.cmd.push(() => {
-        googletag.setConfig({
-          collapseDiv: true
-        });
+        googletag.pubads().collapseEmptyDivs();
         googletag.enableServices();
         logAd("GPT ready");
       });
@@ -73,7 +72,7 @@ export function GAMAdUnit({ adUnitPath, slotId, sizes = [[728, 90], [970, 90], [
         });
       }
     };
-  }, []); // Empty array - only run once on mount
+  }, []);
 
   if (!adsEnabled || !adUnitPath) return null;
 
@@ -92,38 +91,41 @@ export function GAMAdUnit({ adUnitPath, slotId, sizes = [[728, 90], [970, 90], [
 }
 
 // Interstitial Ad (Out-of-Page)
-export function GAMInterstitial({ adUnitPath, slotId }) {
-  const slotRef = useRef(null);
+export function GAMInterstitial({ adUnitPath, slotId = "gam-interstitial" }) {
+  const initialized = useRef(false);
 
   useEffect(() => {
-    if (!adsEnabled || !gamNetworkCode || !adUnitPath) return;
+    if (!adsEnabled || !gamNetworkCode || !adUnitPath || initialized.current) return;
 
+    initialized.current = true;
     window.googletag = window.googletag || { cmd: [] };
 
     googletag.cmd.push(() => {
-      if (slotRef.current) {
-        googletag.destroySlots([slotRef.current]);
+      // Only create one interstitial slot per page
+      if (!interstitialSlot) {
+        interstitialSlot = googletag.defineOutOfPageSlot(
+          adUnitPath,
+          googletag.enums.OutOfPageFormat.INTERSTITIAL
+        );
+
+        if (interstitialSlot) {
+          interstitialSlot.addService(googletag.pubads());
+          logAd("Interstitial defined:", slotId);
+        }
       }
 
-      slotRef.current = googletag
-        .defineOutOfPageSlot(adUnitPath, googletag.enums.OutOfPageFormat.INTERSTITIAL);
-
-      if (slotRef.current) {
-        slotRef.current.addService(googletag.pubads());
+      // Display the interstitial
+      if (interstitialSlot) {
         googletag.display(slotId);
         logAd("Interstitial shown:", slotId);
       }
     });
 
     return () => {
-      if (slotRef.current) {
-        googletag.cmd.push(() => {
-          googletag.destroySlots([slotRef.current]);
-          slotRef.current = null;
-        });
-      }
+      // Don't destroy interstitial on unmount - keep it for the session
+      initialized.current = false;
     };
-  }, []); // Empty array - only run once on mount
+  }, []);
 
   if (!adsEnabled || !adUnitPath) return null;
 

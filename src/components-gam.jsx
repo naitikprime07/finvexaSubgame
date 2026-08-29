@@ -64,8 +64,6 @@ export function InterstitialAd() {
 
   if (!liveAds || !open) return null;
 
-  const slotId = `gam-interstitial-${Date.now()}`;
-
   return (
     <div className="interstitial-backdrop" onClick={closeAd}>
       <div className="interstitial-ad" onClick={(e) => e.stopPropagation()}>
@@ -74,7 +72,7 @@ export function InterstitialAd() {
         </button>
         <div className="interstitial-label">Advertisement</div>
         <div className="interstitial-slot">
-          <GAMInterstitial adUnitPath={interstitialPath} slotId={slotId} />
+          <GAMInterstitial adUnitPath={interstitialPath} slotId="gam-interstitial" />
         </div>
       </div>
     </div>
