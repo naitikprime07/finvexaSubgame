@@ -137,9 +137,18 @@ export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
         googletag.destroySlots([slotRef.current]);
       }
 
-      // Define as regular display ad
+      // Define as regular display ad with mobile-first sizes
+      const interstitialSizes = [
+        [300, 250], // Mobile medium rectangle
+        [336, 280], // Large mobile banner
+        [320, 480], // Mobile interstitial
+        [300, 600], // Half-page
+        [320, 100], // Mobile banner
+        [320, 50]   // Mobile small banner
+      ];
+
       slotRef.current = googletag
-        .defineSlot(adUnitPath, [[300, 250], [336, 280], [320, 480]], slotId)
+        .defineSlot(adUnitPath, interstitialSizes, slotId)
         .addService(googletag.pubads());
 
       // Listen for slot render event

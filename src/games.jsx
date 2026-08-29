@@ -131,14 +131,36 @@ function GameAd({ name }) {
 
   if (!live) return null;
 
+  // Mobile-optimized ad sizes
+  const mobileSizes = largeMobileSlot
+    ? [
+        [336, 280],
+        [300, 250],
+        [320, 480],
+      ] // Large mobile slots
+    : [
+        [320, 100],
+        [320, 50],
+        [300, 250],
+      ]; // Banner mobile slots
+
+  const desktopSizes = [
+    [970, 90],
+    [728, 90],
+  ];
+
+  // Combine mobile-first (mobile sizes first for better mobile ad fill)
+  const adSizes = [...mobileSizes, ...desktopSizes];
+
   // Don't render wrapper until ad loads
   if (!adLoaded) {
     return (
-      <div style={{ display: 'none' }}>
+      <div style={{ display: "none" }}>
         <GAMAdUnit
           adUnitPath={adUnitPath}
           slotId={slotIdRef.current}
-          onAdStateChange={(state) => setAdLoaded(state === 'filled')}
+          sizes={adSizes}
+          onAdStateChange={(state) => setAdLoaded(state === "filled")}
         />
       </div>
     );
@@ -158,7 +180,8 @@ function GameAd({ name }) {
         <GAMAdUnit
           adUnitPath={adUnitPath}
           slotId={slotIdRef.current}
-          onAdStateChange={(state) => setAdLoaded(state === 'filled')}
+          sizes={adSizes}
+          onAdStateChange={(state) => setAdLoaded(state === "filled")}
         />
       </div>
     </aside>

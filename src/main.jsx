@@ -6,6 +6,7 @@ import { Home, Hub, Article, Info, NotFound } from "./pages";
 import { GamePortal } from "./games";
 import { InterstitialAd } from "./components-gam";
 import { GPTLoader } from "./gam-ads";
+import { StickyBottomAd } from "./sticky-bottom-ad";
 
 // Suppress harmless third-party script errors (web-vitals, extensions, etc.)
 window.addEventListener("error", (event) => {
@@ -87,6 +88,7 @@ function App() {
       <ScrollToTop />
       <GPTLoader />
       <InterstitialAd />
+      <StickyBottomAd />
     </>
   );
 }

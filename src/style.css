@@ -97,3 +97,184 @@ html.interstitial-open,html.interstitial-open body{overflow:hidden}.app-content{
 
 /* Game poster titles on hover/focus */
 .game-card>span{left:6px;right:6px;bottom:-52px!important;z-index:3;display:block;padding:25px 8px 8px;border-radius:0 0 12px 12px;background:linear-gradient(transparent,#050509 58%);color:#fff;text-align:center;font-size:13px;font-weight:800;line-height:1.25;text-shadow:0 2px 5px #000;opacity:0;transform:translateY(8px);transition:bottom .22s ease,opacity .22s ease,transform .22s ease;pointer-events:none}.game-card:hover>span,.game-card:focus-visible>span,.game-card:focus-within>span{bottom:6px!important;opacity:1;transform:translateY(0)}.game-card:focus-visible{outline:2px solid #ff6b35;outline-offset:3px}@media(hover:none),(pointer:coarse){.game-card>span{bottom:6px!important;opacity:1;transform:none;font-size:12px}}
+
+/* ============================================
+   STICKY BOTTOM ADVERTISEMENT
+   ============================================ */
+
+/* Container - fixed to bottom, centered, overlay mode */
+.sticky-bottom-ad-container {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9998;
+  
+  /* Layout */
+  width: min(320px, calc(100vw - 16px));
+  max-width: 320px;
+  
+  /* Visual styling */
+  background: #ffffff;
+  border-radius: 12px 12px 0 0;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15),
+              0 -2px 8px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-bottom: none;
+  
+  /* Padding for content */
+  padding: 28px 8px 8px 8px;
+  
+  /* Animation */
+  animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUpFade {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Collapse button - small tab at top-left */
+.sticky-ad-collapse-btn {
+  position: absolute;
+  top: 4px;
+  left: 8px;
+  z-index: 10;
+  
+  /* Size */
+  width: 28px;
+  height: 20px;
+  
+  /* Visual */
+  background: #ffffff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 4px 4px 0 0;
+  
+  /* Remove default button styles */
+  padding: 0;
+  margin: 0;
+  cursor: pointer;
+  
+  /* Center icon */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Icon color */
+  color: #666;
+  
+  /* Smooth transitions */
+  transition: all 0.2s ease;
+  
+  /* Shadow for depth */
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.sticky-ad-collapse-btn svg {
+  width: 16px;
+  height: 16px;
+  display: block;
+}
+
+.sticky-ad-collapse-btn:hover {
+  background: #f5f5f5;
+  color: #333;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12);
+}
+
+.sticky-ad-collapse-btn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+/* Ad label */
+.sticky-ad-label {
+  position: absolute;
+  top: 6px;
+  right: 12px;
+  z-index: 10;
+  
+  /* Typography */
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #999;
+  
+  /* Visual */
+  background: transparent;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+
+/* Ad slot container */
+.sticky-ad-slot {
+  position: relative;
+  width: 100%;
+  min-height: 50px;
+  
+  /* Center ad content */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Ensure ad doesn't overflow */
+  overflow: hidden;
+  border-radius: 6px;
+  background: #ffffff;
+}
+
+/* Ensure ad iframe/content fits properly */
+.sticky-ad-slot > div,
+.sticky-ad-slot iframe,
+.sticky-ad-slot ins {
+  max-width: 100% !important;
+  max-height: 100% !important;
+  margin: 0 auto !important;
+  display: block !important;
+}
+
+/* Mobile adjustments */
+@media (max-width: 360px) {
+  .sticky-bottom-ad-container {
+    width: calc(100vw - 12px);
+    padding: 26px 6px 6px 6px;
+  }
+  
+  .sticky-ad-collapse-btn {
+    left: 6px;
+    width: 26px;
+    height: 18px;
+  }
+  
+  .sticky-ad-collapse-btn svg {
+    width: 14px;
+    height: 14px;
+  }
+}
+
+/* Tablet and larger */
+@media (min-width: 768px) {
+  .sticky-bottom-ad-container {
+    max-width: 336px;
+    width: min(336px, calc(100vw - 32px));
+  }
+}
+
+/* Prevent sticky ad from covering important game controls */
+.game-frame {
+  margin-bottom: 120px; /* Reserve space for sticky ad */
+}
+
+/* Remove margin when ad is not visible */
+body:not(:has(.sticky-bottom-ad-container)) .game-frame {
+  margin-bottom: 20px;
+}
+

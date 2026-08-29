@@ -16,6 +16,18 @@ export function AdSlot({ className = "", label = "Advertisement" }) {
   // Use stable slot ID with useRef
   const slotIdRef = useRef(`gam-home-top-${++adSlotCounter}`);
 
+  // Mobile-first ad sizes (prioritize mobile banner ads)
+  const adSizes = [
+    [320, 100], // Mobile banner
+    [320, 50],  // Mobile small banner
+    [300, 250], // Mobile medium rectangle
+    [336, 280], // Large mobile banner
+    [728, 90],  // Desktop leaderboard
+    [970, 90],  // Desktop large leaderboard
+    [300, 600], // Desktop half-page
+    [160, 600]  // Desktop wide skyscraper
+  ];
+
   if (!live) return null;
 
   // Don't render wrapper until ad loads
@@ -25,6 +37,7 @@ export function AdSlot({ className = "", label = "Advertisement" }) {
         <GAMAdUnit
           adUnitPath={adUnitPath}
           slotId={slotIdRef.current}
+          sizes={adSizes}
           onAdStateChange={(state) => setAdLoaded(state === 'filled')}
         />
       </div>
@@ -36,6 +49,7 @@ export function AdSlot({ className = "", label = "Advertisement" }) {
       <GAMAdUnit
         adUnitPath={adUnitPath}
         slotId={slotIdRef.current}
+        sizes={adSizes}
         onAdStateChange={(state) => setAdLoaded(state === 'filled')}
       />
     </div>
