@@ -1,7 +1,7 @@
 ﻿import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { games, gameCategories } from "./gameData";
-import { AdSenseUnit } from "./components";
+import { GAMAdUnit } from "./gam-ads";
 
 const infoPages = {
   "about_us.html": {
@@ -117,13 +117,14 @@ function GameAd({ name }) {
     "detail-mid": import.meta.env.VITE_AD_BANNER_GAME_MID || "",
     "detail-bottom": import.meta.env.VITE_AD_BANNER_GAME_BOTTOM || "",
   };
-  const slot = slots[name] || "";
+  const adUnitPath = slots[name] || "";
   const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
-  const adsensePublisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID || "";
-  const live = adsEnabled && Boolean(adsensePublisherId) && Boolean(slot);
+  const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
+  const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
 
-  // Only show ad container when AdSense is properly configured and enabled
   if (!live) return null;
+
+  const slotId = `gam-${name}-${Date.now()}`;
 
   return (
     <aside
@@ -136,7 +137,7 @@ function GameAd({ name }) {
         data-desktop-size="970x90"
         data-mobile-size={largeMobileSlot ? "336x280" : "320x100"}
       >
-        <AdSenseUnit slot={slot} />
+        <GAMAdUnit adUnitPath={adUnitPath} slotId={slotId} />
       </div>
     </aside>
   );

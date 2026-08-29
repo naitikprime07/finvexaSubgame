@@ -1,5 +1,5 @@
 ﻿import { Link, useLocation, useParams } from "react-router-dom";
-import { AdLink, PromoCard, Shell } from "./components";
+import { AdLink, PromoCard, Shell } from "./components-gam";
 import { carArticles, healthArticles, pageMap } from "./siteData";
 
 const Para = ({ children }) => <p>{children}</p>;

@@ -4,7 +4,8 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-route
 import "./style.css";
 import { Home, Hub, Article, Info, NotFound } from "./pages";
 import { GamePortal } from "./games";
-import { AdSenseLoader, InterstitialAd } from "./components";
+import { InterstitialAd } from "./components-gam";
+import { GPTLoader } from "./gam-ads";
 
 // Suppress harmless third-party script errors (web-vitals, extensions, etc.)
 window.addEventListener("error", (event) => {
@@ -69,7 +70,7 @@ function App() {
         </Routes>
       </div>
       <ScrollToTop />
-      <AdSenseLoader />
+      <GPTLoader />
       <InterstitialAd />
     </>
   );
