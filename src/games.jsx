@@ -120,7 +120,7 @@ function GameAd({ name }) {
   const slot = slots[name] || "";
   const live =
     import.meta.env.VITE_ADS_ENABLED === "true" &&
-    Boolean(import.meta.env.VITE_ADSENSE_PUBLISHER_ID) &&
+    // Boolean(import.meta.env.VITE_ADSENSE_PUBLISHER_ID) &&
     Boolean(slot);
   // Only show ad container when AdSense is properly configured and enabled
   if (!live) return null;
