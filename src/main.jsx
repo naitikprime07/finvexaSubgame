@@ -6,6 +6,20 @@ import { Home, Hub, Article, Info, NotFound } from "./pages";
 import { GamePortal } from "./games";
 import { AdSenseLoader, InterstitialAd } from "./components";
 
+// Suppress harmless third-party script errors (web-vitals, extensions, etc.)
+window.addEventListener("error", (event) => {
+  // Ignore web-vitals library errors from browser extensions
+  if (
+    event.message &&
+    (event.message.includes("reportAllChanges") ||
+      event.message.includes("startTime") ||
+      event.filename?.includes("chrome-extension://"))
+  ) {
+    event.preventDefault();
+    return false;
+  }
+});
+
 
 function ScrollToTop() {
   const { pathname, search, hash, key } = useLocation();

@@ -64,9 +64,9 @@ export function AdSenseLoader() {
 }
 
 export function AdSenseUnit({ slot, className = "" }) {
+  const adRef = useRef(null);
   const pushed = useRef(false);
   const live = adsEnabled && Boolean(adsensePublisherId) && Boolean(slot);
-  const adRef = useRef(null);
 
   useEffect(() => {
     if (!live) {
@@ -79,13 +79,20 @@ export function AdSenseUnit({ slot, className = "" }) {
       return;
     }
 
+    // CRITICAL: Only push once per component lifecycle
     if (pushed.current) {
-      logAd("Ad unit already initialized for slot:", slot);
+      logAd("Ad unit already pushed for slot:", slot, "- skipping");
       return;
     }
 
-    // Wait a bit for AdSense script to fully load
+    // Wait for AdSense script to fully load
     const timer = setTimeout(() => {
+      // Check again in case of race condition
+      if (pushed.current) {
+        logAd("Ad already pushed during timeout for slot:", slot);
+        return;
+      }
+
       if (!window.adsbygoogle) {
         console.error(
           "[AdSense] AdSense script not loaded. Possible causes:",
@@ -97,7 +104,9 @@ export function AdSenseUnit({ slot, className = "" }) {
         return;
       }
 
+      // Mark as pushed BEFORE the actual push to prevent race conditions
       pushed.current = true;
+
       try {
         logAd("Initializing ad unit:", {
           slot,
@@ -105,17 +114,23 @@ export function AdSenseUnit({ slot, className = "" }) {
           element: adRef.current,
         });
 
+        // Push to AdSense (only happens once per component)
         (window.adsbygoogle = window.adsbygoogle || []).push({});
-        logAd("Ad unit push successful for slot:", slot);
+
+        logAd("✓ Ad unit push successful for slot:", slot);
       } catch (error) {
         console.error("[AdSense] Error initializing ad unit:", error);
         console.error("Slot ID:", slot);
         console.error("Publisher ID:", adsensePublisherId);
+        // Reset on error to allow retry
+        pushed.current = false;
       }
     }, 100);
 
-    return () => clearTimeout(timer);
-  }, [live, slot]);
+    return () => {
+      clearTimeout(timer);
+    };
+  }, []); // Empty deps - only run once on mount
 
   if (!live) return null;
 
