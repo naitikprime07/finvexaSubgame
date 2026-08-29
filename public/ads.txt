@@ -25,8 +25,8 @@
 #
 # ============================================
 
-# Replace 'pub-0000000000000000' with YOUR actual AdSense Publisher ID
-# Example: google.com, pub-1234567890123456, DIRECT, f08c47fec0942fa0
+# Your AdSense Publisher ID configured below
+# This must match VITE_ADSENSE_PUBLISHER_ID in your .env file
 
 google.com, pub-6947636494282386, DIRECT, f08c47fec0942fa0
 

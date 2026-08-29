@@ -2,20 +2,20 @@
 import { Link, useLocation } from "react-router-dom";
 
 const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
-const adsenseClient = import.meta.env.VITE_ADSENSE_CLIENT || "";
+const adsensePublisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID || "";
 
 export function AdSenseLoader() {
   useEffect(() => {
     if (
       !adsEnabled ||
-      !adsenseClient ||
+      !adsensePublisherId ||
       document.querySelector("script[data-finvexo-adsense]")
     )
       return;
     const script = document.createElement("script");
     script.async = true;
     script.crossOrigin = "anonymous";
-    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(adsenseClient)}`;
+    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(adsensePublisherId)}`;
     script.dataset.finvexoAdsense = "true";
     document.head.appendChild(script);
   }, []);
@@ -24,7 +24,7 @@ export function AdSenseLoader() {
 
 export function AdSenseUnit({ slot, className = "" }) {
   const pushed = useRef(false);
-  const live = adsEnabled && Boolean(adsenseClient) && Boolean(slot);
+  const live = adsEnabled && Boolean(adsensePublisherId) && Boolean(slot);
   useEffect(() => {
     if (!live || pushed.current) return;
     pushed.current = true;
@@ -39,7 +39,7 @@ export function AdSenseUnit({ slot, className = "" }) {
     <ins
       className={`adsbygoogle ${className}`}
       style={{ display: "block", width: "100%" }}
-      data-ad-client={adsenseClient}
+      data-ad-client={adsensePublisherId}
       data-ad-slot={slot}
       data-ad-format="auto"
       data-full-width-responsive="true"
@@ -49,8 +49,8 @@ export function AdSenseUnit({ slot, className = "" }) {
 
 // TestAd component removed - no static ads will be shown when AdSense is disabled
 export function AdSlot({ className = "", label = "Advertisement" }) {
-  const slot = import.meta.env.VITE_ADSENSE_MAIN_TOP_SLOT || "";
-  const live = adsEnabled && Boolean(adsenseClient) && Boolean(slot);
+  const slot = import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
+  const live = adsEnabled && Boolean(adsensePublisherId) && Boolean(slot);
 
   // Only show ad container when AdSense is properly configured and enabled
   if (!live) return null;
@@ -180,7 +180,7 @@ export function InterstitialAd() {
       detailRoute ||
       sessionStorage.getItem("finvexo-vignette-seen-v2") !== "true",
   );
-  const liveAds = adsEnabled && Boolean(adsenseClient);
+  const liveAds = adsEnabled && Boolean(adsensePublisherId);
   const mountedRoute = useRef(false);
 
   useEffect(() => {

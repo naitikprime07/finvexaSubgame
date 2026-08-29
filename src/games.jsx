@@ -111,16 +111,16 @@ const infoPages = {
 function GameAd({ name }) {
   const largeMobileSlot = name === "top" || name === "detail-top";
   const slots = {
-    top: import.meta.env.VITE_ADSENSE_GAME_TOP_SLOT || "",
-    bottom: import.meta.env.VITE_ADSENSE_GAME_BOTTOM_SLOT || "",
-    "detail-top": import.meta.env.VITE_ADSENSE_GAME_DETAIL_TOP_SLOT || "",
-    "detail-mid": import.meta.env.VITE_ADSENSE_GAME_DETAIL_MID_SLOT || "",
-    "detail-bottom": import.meta.env.VITE_ADSENSE_GAME_DETAIL_BOTTOM_SLOT || "",
+    top: import.meta.env.VITE_AD_BANNER_CATALOG_TOP || "",
+    bottom: import.meta.env.VITE_AD_BANNER_CATALOG_BOTTOM || "",
+    "detail-top": import.meta.env.VITE_AD_BANNER_GAME_TOP || "",
+    "detail-mid": import.meta.env.VITE_AD_BANNER_GAME_MID || "",
+    "detail-bottom": import.meta.env.VITE_AD_BANNER_GAME_BOTTOM || "",
   };
   const slot = slots[name] || "";
   const live =
     import.meta.env.VITE_ADS_ENABLED === "true" &&
-    Boolean(import.meta.env.VITE_ADSENSE_CLIENT) &&
+    Boolean(import.meta.env.VITE_ADSENSE_PUBLISHER_ID) &&
     Boolean(slot);
   // Only show ad container when AdSense is properly configured and enabled
   if (!live) return null;
