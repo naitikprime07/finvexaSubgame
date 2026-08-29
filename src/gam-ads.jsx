@@ -9,7 +9,6 @@ const logAd = (...args) => {
 };
 
 let gptInitialized = false;
-let interstitialSlot = null;
 
 // Load Google Publisher Tag (GPT)
 export function GPTLoader() {
@@ -90,43 +89,51 @@ export function GAMAdUnit({ adUnitPath, slotId, sizes = [[728, 90], [970, 90], [
   );
 }
 
-// Interstitial Ad (Out-of-Page)
-export function GAMInterstitial({ adUnitPath }) {
-  const initialized = useRef(false);
+// Interstitial Ad - Uses custom overlay with standard ad slot
+export function GAMInterstitial({ adUnitPath, slotId }) {
+  const slotRef = useRef(null);
 
   useEffect(() => {
-    if (!adsEnabled || !gamNetworkCode || !adUnitPath || initialized.current) return;
+    if (!adsEnabled || !gamNetworkCode || !adUnitPath) return;
 
-    initialized.current = true;
     window.googletag = window.googletag || { cmd: [] };
 
     googletag.cmd.push(() => {
-      // Only create one interstitial slot per page
-      if (!interstitialSlot) {
-        interstitialSlot = googletag.defineOutOfPageSlot(
-          adUnitPath,
-          googletag.enums.OutOfPageFormat.INTERSTITIAL
-        );
-
-        if (interstitialSlot) {
-          interstitialSlot.addService(googletag.pubads());
-          logAd("Interstitial defined");
-        }
+      if (slotRef.current) {
+        googletag.destroySlots([slotRef.current]);
       }
 
-      // Display the interstitial
-      if (interstitialSlot) {
-        googletag.display(interstitialSlot);
-        logAd("Interstitial shown");
-      }
+      // Define as regular display ad (not out-of-page)
+      // We create our own overlay UI
+      slotRef.current = googletag
+        .defineSlot(adUnitPath, [[300, 250], [336, 280], [320, 480]], slotId)
+        .addService(googletag.pubads());
+
+      googletag.display(slotId);
+      logAd("Interstitial ad shown:", slotId);
     });
 
     return () => {
-      initialized.current = false;
+      if (slotRef.current) {
+        googletag.cmd.push(() => {
+          googletag.destroySlots([slotRef.current]);
+          slotRef.current = null;
+        });
+      }
     };
   }, []);
 
   if (!adsEnabled || !adUnitPath) return null;
 
-  return null;
+  return (
+    <div
+      id={slotId}
+      style={{
+        minHeight: "250px",
+        minWidth: "300px",
+        textAlign: "center",
+        margin: "0 auto"
+      }}
+    ></div>
+  );
 }

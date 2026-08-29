@@ -24,19 +24,65 @@ export function AdSlot({ className = "", label = "Advertisement" }) {
   );
 }
 
-/**
- * InterstitialAd - Wrapper for GAM interstitial
- * Note: GAM interstitials create their own full-page overlay
- * This component just triggers the interstitial load
- */
+// Interstitial Ad with custom overlay
 export function InterstitialAd() {
+  const { pathname, key: routeKey } = useLocation();
+  const detailRoute =
+    /^\/en\/(carFinance|healthFinance)\/[^/]+(?:\/index\.html)?\/?$/i.test(pathname);
+
+  const [open, setOpen] = useState(
+    () =>
+      detailRoute ||
+      sessionStorage.getItem("finvexo-vignette-seen-v2") !== "true"
+  );
+
   const interstitialPath = import.meta.env.VITE_AD_INTERSTITIAL || "";
   const liveAds = adsEnabled && Boolean(gamNetworkCode) && Boolean(interstitialPath);
+  const mountedRoute = useRef(false);
 
-  if (!liveAds) return null;
+  // Stable slot ID for interstitial
+  const slotIdRef = useRef("gam-interstitial-main");
 
-  // GAMInterstitial handles everything - just pass the ad unit path
-  return <GAMInterstitial adUnitPath={interstitialPath} />;
+  useEffect(() => {
+    if (detailRoute) setOpen(true);
+    else if (mountedRoute.current) setOpen(false);
+    mountedRoute.current = true;
+  }, [pathname, routeKey, detailRoute]);
+
+  useEffect(() => {
+    if (!open) return undefined;
+    document.documentElement.classList.add("interstitial-open");
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      document.documentElement.classList.remove("interstitial-open");
+      window.removeEventListener("keydown", closeOnEscape);
+    };
+  }, [open]);
+
+  const closeAd = () => {
+    sessionStorage.setItem("finvexo-vignette-seen-v2", "true");
+    document.documentElement.classList.remove("interstitial-open");
+    setOpen(false);
+  };
+
+  if (!liveAds || !open) return null;
+
+  return (
+    <div className="interstitial-backdrop" onClick={closeAd}>
+      <div className="interstitial-ad" onClick={(e) => e.stopPropagation()}>
+        <button className="interstitial-close" onClick={closeAd} aria-label="Close advertisement">
+          ×
+        </button>
+        <div className="interstitial-label">Advertisement</div>
+        <div className="interstitial-slot">
+          <GAMInterstitial adUnitPath={interstitialPath} slotId={slotIdRef.current} />
+        </div>
+      </div>
+    </div>
+  );
 }
 
 export function StickyVisual() {

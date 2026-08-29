@@ -6,7 +6,8 @@
       "Bash(git add .)",
       "Bash(cat \"d:\\Game Web\\src\\components-gam.jsx\")",
       "Bash(cat \"d:\\Game Web\\index.html\")",
-      "Bash(cat games.jsx)"
+      "Bash(cat games.jsx)",
+      "Bash(git log --all --oneline --grep=\"interstitial\" -i)"
     ],
     "deny": [],
     "ask": []
