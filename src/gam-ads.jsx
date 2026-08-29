@@ -29,7 +29,9 @@ export function GPTLoader() {
 
     script.onload = () => {
       googletag.cmd.push(() => {
-        googletag.pubads().collapseEmptyDivs();
+        googletag.setConfig({
+          collapseDiv: true
+        });
         googletag.enableServices();
         logAd("GPT ready");
       });
