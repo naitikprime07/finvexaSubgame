@@ -118,10 +118,10 @@ function GameAd({ name }) {
     "detail-bottom": import.meta.env.VITE_AD_BANNER_GAME_BOTTOM || "",
   };
   const slot = slots[name] || "";
-  const live =
-    import.meta.env.VITE_ADS_ENABLED === "true" &&
-    Boolean(import.meta.env.VITE_ADSENSE_PUBLISHER_ID) &&
-    Boolean(slot);
+  const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
+  const adsensePublisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID || "";
+  const live = adsEnabled && Boolean(adsensePublisherId) && Boolean(slot);
+
   // Only show ad container when AdSense is properly configured and enabled
   if (!live) return null;
 
