@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
 const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
@@ -41,9 +41,15 @@ export function GPTLoader() {
   return null;
 }
 
-// GAM Ad Unit Component
-export function GAMAdUnit({ adUnitPath, slotId, sizes = [[728, 90], [970, 90], [320, 50], [300, 250]] }) {
+// GAM Ad Unit Component with empty state handling
+export function GAMAdUnit({ 
+  adUnitPath, 
+  slotId, 
+  sizes = [[728, 90], [970, 90], [320, 50], [300, 250]] 
+}) {
   const slotRef = useRef(null);
+  const [isEmpty, setIsEmpty] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (!adsEnabled || !gamNetworkCode || !adUnitPath) return;
@@ -59,8 +65,23 @@ export function GAMAdUnit({ adUnitPath, slotId, sizes = [[728, 90], [970, 90], [
         .defineSlot(adUnitPath, sizes, slotId)
         .addService(googletag.pubads());
 
+      // Listen for slot render event to detect empty slots
+      const renderListener = googletag.pubads().addEventListener('slotRenderEnded', (event) => {
+        if (event.slot === slotRef.current) {
+          if (event.isEmpty) {
+            logAd("Ad slot empty:", slotId);
+            setIsEmpty(true);
+            setIsLoaded(true);
+          } else {
+            logAd("Ad loaded:", slotId);
+            setIsEmpty(false);
+            setIsLoaded(true);
+          }
+        }
+      });
+
       googletag.display(slotId);
-      logAd("Ad shown:", slotId);
+      logAd("Ad requested:", slotId);
     });
 
     return () => {
@@ -75,23 +96,30 @@ export function GAMAdUnit({ adUnitPath, slotId, sizes = [[728, 90], [970, 90], [
 
   if (!adsEnabled || !adUnitPath) return null;
 
+  // Don't render anything if ad is empty
+  if (isEmpty) return null;
+
   return (
     <div
       id={slotId}
       style={{
-        minHeight: "90px",
+        minHeight: isLoaded ? "auto" : "90px",
         minWidth: "320px",
         textAlign: "center",
-        background: "#f9f9f9",
-        margin: "10px auto"
+        background: isLoaded ? "transparent" : "#f9f9f9",
+        margin: "10px auto",
+        opacity: isLoaded ? 1 : 0.5,
+        transition: "opacity 0.3s ease"
       }}
     ></div>
   );
 }
 
 // Interstitial Ad - Uses custom overlay with standard ad slot
-export function GAMInterstitial({ adUnitPath, slotId }) {
+export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
   const slotRef = useRef(null);
+  const [isEmpty, setIsEmpty] = useState(false);
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
     if (!adsEnabled || !gamNetworkCode || !adUnitPath) return;
@@ -104,13 +132,29 @@ export function GAMInterstitial({ adUnitPath, slotId }) {
       }
 
       // Define as regular display ad (not out-of-page)
-      // We create our own overlay UI
       slotRef.current = googletag
         .defineSlot(adUnitPath, [[300, 250], [336, 280], [320, 480]], slotId)
         .addService(googletag.pubads());
 
+      // Listen for slot render event
+      const renderListener = googletag.pubads().addEventListener('slotRenderEnded', (event) => {
+        if (event.slot === slotRef.current) {
+          if (event.isEmpty) {
+            logAd("Interstitial slot empty:", slotId);
+            setIsEmpty(true);
+            setIsLoaded(true);
+            if (onEmptyStateChange) onEmptyStateChange(true);
+          } else {
+            logAd("Interstitial loaded:", slotId);
+            setIsEmpty(false);
+            setIsLoaded(true);
+            if (onEmptyStateChange) onEmptyStateChange(false);
+          }
+        }
+      });
+
       googletag.display(slotId);
-      logAd("Interstitial ad shown:", slotId);
+      logAd("Interstitial requested:", slotId);
     });
 
     return () => {
@@ -125,14 +169,19 @@ export function GAMInterstitial({ adUnitPath, slotId }) {
 
   if (!adsEnabled || !adUnitPath) return null;
 
+  // Don't render container if ad is empty
+  if (isEmpty) return null;
+
   return (
     <div
       id={slotId}
       style={{
-        minHeight: "250px",
+        minHeight: isLoaded ? "auto" : "250px",
         minWidth: "300px",
         textAlign: "center",
-        margin: "0 auto"
+        margin: "0 auto",
+        opacity: isLoaded ? 1 : 0.5,
+        transition: "opacity 0.3s ease"
       }}
     ></div>
   );
