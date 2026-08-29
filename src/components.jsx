@@ -3,21 +3,62 @@ import { Link, useLocation } from "react-router-dom";
 
 const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
 const adsensePublisherId = import.meta.env.VITE_ADSENSE_PUBLISHER_ID || "";
+const debugMode = import.meta.env.VITE_ADS_DEBUG === "true";
+
+// Debug logging helper
+const logAd = (...args) => {
+  if (debugMode) {
+    console.log("[AdSense Debug]", ...args);
+  }
+};
 
 export function AdSenseLoader() {
   useEffect(() => {
-    if (
-      !adsEnabled ||
-      !adsensePublisherId ||
-      document.querySelector("script[data-finvexo-adsense]")
-    )
+    const adsbygoogleSrc = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsensePublisherId}`;
+
+    logAd("AdSense Loader initialized", {
+      adsEnabled,
+      publisherId: adsensePublisherId,
+      scriptExists: !!document.querySelector(`script[src*="pagead2.googlesyndication.com"]`),
+    });
+
+    if (!adsEnabled) {
+      logAd("Ads are disabled (VITE_ADS_ENABLED=false)");
       return;
+    }
+
+    if (!adsensePublisherId) {
+      console.warn(
+        "[AdSense] Publisher ID is missing. Set VITE_ADSENSE_PUBLISHER_ID in .env"
+      );
+      return;
+    }
+
+    // Check if AdSense script already exists (standard Google way)
+    if (document.querySelector(`script[src*="pagead2.googlesyndication.com"]`)) {
+      logAd("AdSense script already loaded");
+      return;
+    }
+
+    // Create script element exactly as Google specifies
     const script = document.createElement("script");
     script.async = true;
+    script.src = adsbygoogleSrc;
     script.crossOrigin = "anonymous";
-    script.src = `https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${encodeURIComponent(adsensePublisherId)}`;
-    script.dataset.finvexoAdsense = "true";
+
+    script.onload = () => {
+      logAd("AdSense script loaded successfully");
+    };
+
+    script.onerror = (error) => {
+      console.error("[AdSense] Failed to load AdSense script:", error);
+      console.error(
+        "[AdSense] Check: 1) Internet connection 2) Ad blocker disabled 3) Publisher ID correct"
+      );
+    };
+
     document.head.appendChild(script);
+    logAd("AdSense script added to page");
   }, []);
   return null;
 }
@@ -25,18 +66,62 @@ export function AdSenseLoader() {
 export function AdSenseUnit({ slot, className = "" }) {
   const pushed = useRef(false);
   const live = adsEnabled && Boolean(adsensePublisherId) && Boolean(slot);
+  const adRef = useRef(null);
+
   useEffect(() => {
-    if (!live || pushed.current) return;
-    pushed.current = true;
-    try {
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch (error) {
-      console.warn("AdSense unit initialization was deferred.", error);
+    if (!live) {
+      logAd("Ad unit not shown:", {
+        adsEnabled,
+        hasPublisherId: Boolean(adsensePublisherId),
+        hasSlotId: Boolean(slot),
+        slot,
+      });
+      return;
     }
-  }, [live]);
+
+    if (pushed.current) {
+      logAd("Ad unit already initialized for slot:", slot);
+      return;
+    }
+
+    // Wait a bit for AdSense script to fully load
+    const timer = setTimeout(() => {
+      if (!window.adsbygoogle) {
+        console.error(
+          "[AdSense] AdSense script not loaded. Possible causes:",
+          "\n1. Ad blocker is active",
+          "\n2. Internet connection issue",
+          "\n3. AdSense script failed to load",
+          "\n4. Publisher ID incorrect"
+        );
+        return;
+      }
+
+      pushed.current = true;
+      try {
+        logAd("Initializing ad unit:", {
+          slot,
+          publisherId: adsensePublisherId,
+          element: adRef.current,
+        });
+
+        (window.adsbygoogle = window.adsbygoogle || []).push({});
+        logAd("Ad unit push successful for slot:", slot);
+      } catch (error) {
+        console.error("[AdSense] Error initializing ad unit:", error);
+        console.error("Slot ID:", slot);
+        console.error("Publisher ID:", adsensePublisherId);
+      }
+    }, 100);
+
+    return () => clearTimeout(timer);
+  }, [live, slot]);
+
   if (!live) return null;
+
   return (
     <ins
+      ref={adRef}
       className={`adsbygoogle ${className}`}
       style={{ display: "block", width: "100%" }}
       data-ad-client={adsensePublisherId}
