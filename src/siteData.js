@@ -90,9 +90,9 @@ export const healthArticles = {
 };
 export const pageMap = {
   "about-page": [
-    "Finance.Finerezo",
-    "Why Choose Finance.Finerezo ?",
-    "About Us - Finance.Finerezo",
+    "Finvexa",
+    "Why Choose Finvexa?",
+    "About Us - Finvexa",
   ],
   "contact-page": ["Contact Us", "Copyright Issue"],
   "terms-of-service-page": [

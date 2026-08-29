@@ -796,7 +796,7 @@ const faq = [
   "Who is behind the content at FiveMinutes Insights?",
   "Do you have a privacy policy?",
   "Can I share your articles on social media?",
-  "Can I contribute to Finance.Finerezo?",
+  "Can I contribute to Finvexa?",
 ];
 export function Info() {
   const { page } = useParams();
@@ -812,7 +812,7 @@ export function Info() {
             <section key={h}>
               <h2>{h}</h2>
               <Para>
-                Finance.Finerezo provides quick, practical information intended
+                Finvexa provides quick, practical information intended
                 for general educational purposes. Please review this section
                 carefully and contact us if you have questions.
               </Para>
@@ -842,10 +842,10 @@ export function Game() {
   return (
     <Shell ad={false}>
       <div className="game-page">
-        <h1>Finvexo HTML5 Game</h1>
+        <h1>Finvexa HTML5 Game</h1>
         <div className="game-frame">Game area</div>
         <Link className="more-button" to="/">
-          Back to Finvexo
+          Back to Finvexa
         </Link>
       </div>
     </Shell>
