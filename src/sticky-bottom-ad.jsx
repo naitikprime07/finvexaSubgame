@@ -1,86 +1,102 @@
-import { useState, useEffect, useRef } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { GAMAdUnit } from "./gam-ads";
 
 const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
 const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
+const MOBILE_MAX_WIDTH = 768;
 
 export function StickyBottomAd() {
   const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [adState, setAdState] = useState('loading');
-  const [isMobile, setIsMobile] = useState(false);
-  const [key, setKey] = useState(0); // Force re-render on route change
+  const [adState, setAdState] = useState("loading");
+  const [isMobile, setIsMobile] = useState(
+    () => window.innerWidth <= MOBILE_MAX_WIDTH
+  );
 
+  // This is the dedicated GAM unit for the bottom mobile anchor.
   const adUnitPath = import.meta.env.VITE_AD_ANCHOR || "";
-  const slotIdRef = useRef(`gam-sticky-bottom-${Date.now()}`);
+  const slotPrefixRef = useRef("gam-mobile-anchor");
+  const routeKey = location.key || location.pathname;
+  const safeRouteKey = routeKey.replace(/[^a-zA-Z0-9_-]/g, "-");
+  const slotId = slotPrefixRef.current + "-" + safeRouteKey;
 
   const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
 
-  // Check if mobile device
+  const adSizes = useMemo(
+    () => [[728, 90], [320, 100], [320, 50], [300, 50]],
+    []
+  );
+  const sizeMapping = useMemo(
+    () => [
+      { viewport: [728, 0], sizes: [[728, 90], [320, 100], [320, 50]] },
+      { viewport: [320, 0], sizes: [[320, 100], [320, 50]] },
+      { viewport: [0, 0], sizes: [[300, 50]] },
+    ],
+    []
+  );
+
   useEffect(() => {
+    let resizeTimer;
     const checkMobile = () => {
-      setIsMobile(window.innerWidth <= 768);
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        setIsMobile(window.innerWidth <= MOBILE_MAX_WIDTH);
+      }, 100);
     };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+
+    window.addEventListener("resize", checkMobile);
+    return () => {
+      window.removeEventListener("resize", checkMobile);
+      window.clearTimeout(resizeTimer);
+    };
   }, []);
 
-  // Reset ad state on route change
+  // A route change creates a fresh slot ID and request while preserving SPA navigation.
   useEffect(() => {
-    setAdState('loading');
+    setAdState("loading");
     setIsCollapsed(false);
-    setKey(prev => prev + 1); // Force new ad request
-  }, [location.pathname]);
+  }, [location.key, location.pathname]);
 
-  // Handle ad state change
-  const handleAdStateChange = (state) => {
+  useEffect(() => {
+    if (isMobile) setAdState("loading");
+  }, [isMobile]);
+
+  const handleAdStateChange = useCallback((state) => {
     setAdState(state);
-  };
+  }, []);
 
-  // Mobile-optimized sticky ad sizes
-  const stickyAdSizes = [
-    [320, 100], // Mobile banner
-    [320, 50],  // Mobile small banner
-    [300, 250], // Medium rectangle (fallback)
-    [336, 280], // Large mobile banner
-  ];
-
-  // Don't render if not enabled, not mobile, collapsed, or ad empty/loading
-  if (!live || !isMobile || isCollapsed || adState !== 'filled') {
-    return null;
-  }
+  if (!live || !isMobile || isCollapsed) return null;
 
   return (
-    <div className="sticky-bottom-ad-container">
-      {/* Collapse button */}
+    <aside
+      className={"sticky-bottom-ad-container is-" + adState}
+      aria-label="Advertisement"
+      aria-hidden={adState !== "filled"}
+    >
       <button
         className="sticky-ad-collapse-btn"
-        onClick={() => {
-          setIsCollapsed(true);
-        }}
-        aria-label="Close ad"
-        title="Close ad"
+        type="button"
+        onClick={() => setIsCollapsed(true)}
+        aria-label="Close advertisement"
+        title="Close advertisement"
       >
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
           <path d="M19 9l-7 7-7-7" />
         </svg>
       </button>
 
-      {/* Ad label */}
       <div className="sticky-ad-label">Ad</div>
-
-      {/* Ad slot */}
       <div className="sticky-ad-slot">
         <GAMAdUnit
-          key={key}
+          key={slotId}
           adUnitPath={adUnitPath}
-          slotId={`${slotIdRef.current}-${key}`}
-          sizes={stickyAdSizes}
+          slotId={slotId}
+          sizes={adSizes}
+          sizeMapping={sizeMapping}
           onAdStateChange={handleAdStateChange}
         />
       </div>
-    </div>
+    </aside>
   );
 }

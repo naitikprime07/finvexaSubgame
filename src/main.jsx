@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useLayoutEffect } from "react";
+import React, { useEffect, useLayoutEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-router-dom";
 import "./style.css";
@@ -71,6 +71,7 @@ function ScrollToTop() {
 function App() {
   return (
     <>
+      <GPTLoader />
       <div className="app-content">
         <Routes>
           <Route path="/" element={<Home />} />
@@ -86,7 +87,6 @@ function App() {
         </Routes>
       </div>
       <ScrollToTop />
-      <GPTLoader />
       <InterstitialAd />
       <StickyBottomAd />
     </>

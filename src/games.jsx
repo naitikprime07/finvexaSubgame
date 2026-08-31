@@ -1,4 +1,4 @@
-﻿import { useEffect, useRef, useState } from "react";
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { games, gameCategories } from "./gameData";
 import { GAMAdUnit } from "./gam-ads";
@@ -131,30 +131,22 @@ function GameAd({ name }) {
 
   if (!live) return null;
 
-  // Mobile-optimized ad sizes
-  const mobileSizes = largeMobileSlot
-    ? [
-        [336, 280],
-        [300, 250],
-        [320, 480],
-      ] // Large mobile slots
-    : [
-        [320, 100],
-        [320, 50],
-        [300, 250],
-      ]; // Banner mobile slots
+  const mobileSizes = useMemo(() => (
+    largeMobileSlot
+      ? [[336, 280], [300, 250]]
+      : [[320, 100], [320, 50], [300, 50]]
+  ), [largeMobileSlot]);
+  const desktopSizes = useMemo(() => [[970, 90], [728, 90]], []);
+  const adSizes = useMemo(() => [...desktopSizes, ...mobileSizes], [desktopSizes, mobileSizes]);
+  const sizeMapping = useMemo(() => [
+    { viewport: [769, 0], sizes: desktopSizes },
+    { viewport: [336, 0], sizes: mobileSizes },
+    { viewport: [0, 0], sizes: largeMobileSlot ? [[300, 250]] : [[300, 50]] }
+  ], [desktopSizes, largeMobileSlot, mobileSizes]);
 
-  const desktopSizes = [
-    [970, 90],
-    [728, 90],
-  ];
-
-  // Combine mobile-first (mobile sizes first for better mobile ad fill)
-  const adSizes = [...mobileSizes, ...desktopSizes];
-
-  const handleAdStateChange = (state) => {
+  const handleAdStateChange = useCallback((state) => {
     setAdState(state);
-  };
+  }, []);
 
   // Like reference site - always render, GAMAdUnit handles visibility internally
   return (
@@ -172,6 +164,7 @@ function GameAd({ name }) {
           adUnitPath={adUnitPath}
           slotId={slotIdRef.current}
           sizes={adSizes}
+          sizeMapping={sizeMapping}
           onAdStateChange={handleAdStateChange}
         />
       </div>
@@ -405,17 +398,15 @@ function InlineAd({ position }) {
 
   const slotIdRef = useRef(`gam-inline-${position}-${Math.random().toString(36).substr(2, 9)}`);
 
-  // Mobile and desktop ad sizes
-  const adSizes = [
-    [300, 250], // Medium rectangle
-    [336, 280], // Large mobile banner
-    [320, 100], // Mobile banner
-    [320, 50],  // Mobile small banner
-  ];
+  const adSizes = useMemo(() => [[336, 280], [300, 250], [320, 100], [320, 50]], []);
+  const sizeMapping = useMemo(() => [
+    { viewport: [336, 0], sizes: adSizes },
+    { viewport: [0, 0], sizes: [[300, 250]] }
+  ], [adSizes]);
 
-  const handleAdStateChange = (state) => {
+  const handleAdStateChange = useCallback((state) => {
     setAdState(state);
-  };
+  }, []);
 
   if (!live || adState === 'empty') return null;
 
@@ -436,6 +427,7 @@ function InlineAd({ position }) {
         adUnitPath={adUnitPath}
         slotId={slotIdRef.current}
         sizes={adSizes}
+        sizeMapping={sizeMapping}
         onAdStateChange={handleAdStateChange}
       />
     </div>

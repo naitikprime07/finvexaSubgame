@@ -1925,7 +1925,6 @@ a {
 .ad-slot-frame>div {
   display: block !important;
   max-width: 100% !important;
-  height: auto !important;
   margin: auto !important
 }
 
@@ -3017,8 +3016,8 @@ html.interstitial-open body {
   z-index: 9998;
 
   /* Layout */
-  width: min(320px, calc(100vw - 16px));
-  max-width: 320px;
+  width: min(322px, calc(100vw - 12px));
+  max-width: 322px;
 
   /* Visual styling */
   background: #ffffff;
@@ -3029,9 +3028,21 @@ html.interstitial-open body {
   border-bottom: none;
 
   /* Padding for content */
-  padding: 28px 8px 8px 8px;
+  padding: 28px 0 0;
 
-  /* Animation */
+}
+
+.sticky-bottom-ad-container.is-loading {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.sticky-bottom-ad-container.is-empty {
+  display: none;
+}
+
+.sticky-bottom-ad-container.is-filled {
+  visibility: visible;
   animation: slideUpFade 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -3152,7 +3163,7 @@ html.interstitial-open body {
 @media (max-width: 360px) {
   .sticky-bottom-ad-container {
     width: calc(100vw - 12px);
-    padding: 26px 6px 6px 6px;
+    padding: 26px 0 0;
   }
 
   .sticky-ad-collapse-btn {
@@ -3167,23 +3178,20 @@ html.interstitial-open body {
   }
 }
 
-/* Tablet and larger */
-@media (min-width: 768px) {
+/* Wider phones and tablets can use the configured 728x90 anchor creative. */
+@media (min-width: 600px) {
   .sticky-bottom-ad-container {
-    max-width: 336px;
-    width: min(336px, calc(100vw - 32px));
+    max-width: 730px;
+    width: min(730px, calc(100vw - 16px));
   }
 }
 
-/* Prevent sticky ad from covering important game controls */
 .game-frame {
-  margin-bottom: 120px;
-  /* Reserve space for sticky ad */
+  margin-bottom: 20px;
 }
 
-/* Remove margin when ad is not visible */
-body:not(:has(.sticky-bottom-ad-container)) .game-frame {
-  margin-bottom: 20px;
+body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
+  margin-bottom: 120px;
 }
 
 
