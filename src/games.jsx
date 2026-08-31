@@ -390,7 +390,6 @@ function coverFor(game) {
 }
 // Inline ad component that fits in game grid
 function InlineAd({ position }) {
-  const [adState, setAdState] = useState('loading');
   const adUnitPath = import.meta.env.VITE_AD_BANNER_CATALOG_MID || import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
   const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
   const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
@@ -404,33 +403,27 @@ function InlineAd({ position }) {
     { viewport: [0, 0], sizes: [[300, 250]] }
   ], [adSizes]);
 
-  const handleAdStateChange = useCallback((state) => {
-    setAdState(state);
-  }, []);
 
   if (!live) return null;
 
-  // Inline ad card that looks like a game card but contains an ad
+  // Inline ad placement intentionally does not use game-card styling.
   return (
-    <div className="game-card inline-ad-card" aria-label="Advertisement">
+    <div className="inline-ad-card" aria-label="Advertisement">
       <div className="game-ad-label">Advertisement</div>
       <GAMAdUnit
         adUnitPath={adUnitPath}
         slotId={slotIdRef.current}
         sizes={adSizes}
         sizeMapping={sizeMapping}
-        onAdStateChange={handleAdStateChange}
       />
     </div>
   );
 }
 
-function Cards({ items }) {
+function Cards({ items, startOffset = 0, middlePositions = new Map() }) {
   const itemsWithAds = [];
-  const AD_INTERVAL = 6; // Show ad after every 6 games
 
   items.forEach((g, index) => {
-    // Add game card
     itemsWithAds.push(
       <Link className="game-card" key={g.slug} to={`/play/${g.slug}.html`}>
         <div
@@ -453,22 +446,34 @@ function Cards({ items }) {
       </Link>
     );
 
-    // Add inline ad after every AD_INTERVAL games
-    if ((index + 1) % AD_INTERVAL === 0 && index < items.length - 1) {
-      itemsWithAds.push(<InlineAd key={`ad-${index}`} position={index} />);
+    const globalPosition = startOffset + index + 1;
+    const middleNumber = middlePositions.get(globalPosition);
+    if (middleNumber) {
+      itemsWithAds.push(
+        <InlineAd key={`middle-ad-${middleNumber}`} position={`middle-${middleNumber}`} />
+      );
     }
   });
 
-  return (
-    <div className="game-grid">
-      {itemsWithAds}
-    </div>
-  );
+  return <div className="game-grid">{itemsWithAds}</div>;
 }
-function Catalog({ query, active }) {
+
+function middleAdPositions(totalGames, enabled) {
+  if (!enabled || totalGames < 2) return new Map();
+
+  const positions = new Map();
+  [0.25, 0.5, 0.75].forEach((fraction, index) => {
+    const position = Math.min(totalGames - 1, Math.max(1, Math.round(totalGames * fraction)));
+    if (!positions.has(position)) positions.set(position, index + 1);
+  });
+  return positions;
+}
+
+function Catalog({ query, active, showInlineAds = true }) {
   const q = query.trim().toLowerCase();
   if (q) {
     const found = games.filter((g) => g.name.toLowerCase().includes(q));
+    const placements = middleAdPositions(found.length, showInlineAds);
     return (
       <section className="catalog" id="all-categories">
         <div className="cat-heading">
@@ -476,39 +481,51 @@ function Catalog({ query, active }) {
           <span>{found.length} games</span>
         </div>
         {found.length ? (
-          <Cards items={found} />
+          <Cards items={found} middlePositions={placements} />
         ) : (
           <p className="no-games">No games found.</p>
         )}
       </section>
     );
   }
-  const cats =
-    active === "all"
-      ? gameCategories
-      : gameCategories.filter((c) => c.id === active);
+
+  const cats = active === "all"
+    ? gameCategories
+    : gameCategories.filter((category) => category.id === active);
+  const categoryItems = cats.map((category) => ({
+    category,
+    items: games.filter((game) => game.cats.includes(category.id)),
+  }));
+  const totalGames = categoryItems.reduce((total, entry) => total + entry.items.length, 0);
+  const placements = middleAdPositions(totalGames, showInlineAds);
+  let startOffset = 0;
+
   return (
     <div className="catalog" id="all-categories">
-      {cats.map((c) => {
-        const items = games.filter((g) => g.cats.includes(c.id));
+      {categoryItems.map(({ category, items }) => {
+        const categoryOffset = startOffset;
+        startOffset += items.length;
         return (
-          <section className="game-category" key={c.id}>
+          <section className="game-category" key={category.id}>
             <div className="cat-heading">
               <h2>
-                {categoryIcon(c.id)} {c.label}
+                {categoryIcon(category.id)} {category.label}
               </h2>
               <span>
-                {c.desc} — {items.length} games
+                {category.desc} — {items.length} games
               </span>
             </div>
-            <Cards items={items} />
+            <Cards
+              items={items}
+              startOffset={categoryOffset}
+              middlePositions={placements}
+            />
           </section>
         );
       })}
     </div>
   );
-}
-function LocalHtmlGame({ game }) {
+}function LocalHtmlGame({ game }) {
   const [frameHeight, setFrameHeight] = useState(620);
   const fitGame = (event) => {
     const frame = event.currentTarget;
@@ -622,7 +639,7 @@ function GameDetail({ slug, query, active }) {
         <p>{howToPlayFor(game)}</p>
       </article>
       <GameAd name="detail-bottom" />
-      <Catalog query="" active="all" />
+      <Catalog query="" active="all" showInlineAds={false} />
     </main>
   );
 }
