@@ -36,6 +36,12 @@ export function GPTLoader() {
 
     script.onload = () => {
       googletag.cmd.push(() => {
+        // Use setConfig instead of deprecated methods
+        googletag.setConfig({
+          adAttributes: {
+            page_url: window.location.href
+          }
+        });
         googletag.pubads().set('page_url', window.location.href);
         googletag.enableServices();
         if (testMode) {
