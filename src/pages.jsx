@@ -1,25 +1,34 @@
 ﻿import { Link, useLocation, useParams } from "react-router-dom";
-import { AdLink, PromoCard, Shell } from "./components-gam";
+import { AdLink, PromoCard, Shell, StickyVisual, Footer, AdSlot } from "./components-gam";
 import { carArticles, healthArticles, pageMap } from "./siteData";
 
 const Para = ({ children }) => <p>{children}</p>;
 export function Home() {
   return (
-    <Shell>
-      <PromoCard>
-        <h2>Play Free Games on 5minutes games</h2>
-        <AdLink to="/play">Play Now</AdLink>
-      </PromoCard>
-      <h1 className="main-title">
-        Top Finance Plans: Car, Health, Life, and More
-      </h1>
-      <PromoCard>
-        <h2>Get exclusive insurance info</h2>
-        <div className="button-row">
-          <AdLink to="/en/carFinance">Car</AdLink>
-          <AdLink to="/en/healthFinance">Health</AdLink>
+    <main className="home-layout">
+      <aside className="home-left-column">
+        <div className="home-ad-slot">
+          <AdSlot className="vertical-ad" />
         </div>
-      </PromoCard>
+        <PromoCard>
+          <h2>Play Free Games on 5minutes games</h2>
+          <AdLink to="/play">Play Now</AdLink>
+        </PromoCard>
+        <h1 className="main-title">
+          Top Finance Plans: Car, Health, Life, and More
+        </h1>
+        <PromoCard>
+          <h2>Get exclusive insurance info</h2>
+          <div className="button-row">
+            <AdLink to="/en/carFinance">Car</AdLink>
+            <AdLink to="/en/healthFinance">Health</AdLink>
+          </div>
+        </PromoCard>
+      </aside>
+      <div className="home-right-column">
+        <StickyVisual />
+      </div>
+      <section className="home-full-content">
       <article className="home-copy">
         <h2>Find the Best Finance for Every Need</h2>
         <Para>
@@ -141,7 +150,9 @@ export function Home() {
           More
         </Link>
       </article>
-    </Shell>
+      <Footer />
+      </section>
+    </main>
   );
 }
 
