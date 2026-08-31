@@ -72,41 +72,63 @@ a {
 
 /* Homepage-specific layout (vertical ad on left) */
 .home-layout {
-  display: flex;
-  justify-content: center;
-  gap: 60px;
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 12px;
-  align-items: start
+  display: grid;
+  grid-template-columns: 520px minmax(0, 1fr);
+  width: 100%;
+  height: 100vh;
+  margin: 0;
+  overflow: hidden;
+  align-items: stretch
 }
 
 .home-left-column {
-  flex: 0 0 auto;
-  width: 336px;
-  max-width: 336px
+  width: 100%;
+  max-width: 520px;
+  height: 100vh;
+  min-width: 0;
+  padding: 12px;
+  overflow-y: auto;
+  scrollbar-width: none
+}
+
+.home-left-column::-webkit-scrollbar {
+  display: none
 }
 
 .home-right-column {
-  flex: 1;
-  max-width: 840px;
-  position: sticky;
-  top: 0;
-  padding-top: 38px
+  width: 100%;
+  height: 100vh;
+  min-width: 0
 }
 
 .home-ad-slot {
   width: 336px;
   height: 600px;
-  overflow: visible;
-  margin-bottom: 20px
+  overflow: hidden;
+  margin: 0 auto 20px
 }
 
 .vertical-ad {
+  max-width: 100%;
+  min-height: 600px
+}
+
+.home-right-column .sticky-visual {
+  position: sticky;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   width: 100%;
-  height: 100%;
-  min-height: 600px;
-  overflow: visible
+  height: 100vh;
+  min-height: 0;
+  padding: 32px 0 20px
+}
+
+.home-right-column .sticky-visual>img {
+  width: 100%;
+  height: min(788px, calc(100vh - 150px));
+  object-fit: contain
 }
 
 .button-row {
@@ -407,16 +429,21 @@ a {
 
   /* Homepage mobile layout */
   .home-layout {
-    flex-direction: column;
+    display: block;
+    width: 100%;
+    height: auto;
+    min-height: 100vh;
     padding: 10px 12px;
-    gap: 20px
+    overflow: visible
   }
 
   .home-left-column {
     width: 100%;
     max-width: 520px;
+    height: auto;
     margin: 0 auto;
-    order: 1
+    padding: 0;
+    overflow: visible
   }
 
   .home-right-column {
@@ -426,14 +453,17 @@ a {
   .home-ad-slot {
     width: 100%;
     height: auto;
-    min-height: 250px;
-    max-height: 300px
+    min-height: 0;
+    max-height: 280px;
+    overflow: hidden
   }
 
   .vertical-ad {
-    min-height: 250px;
-    height: auto
+    min-height: 0;
+    height: auto;
+    max-height: 280px
   }
+
 }
 
 @media(max-width:480px) {

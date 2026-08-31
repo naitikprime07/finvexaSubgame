@@ -67,6 +67,7 @@ export function GAMAdUnit({
   adUnitPath,
   slotId,
   sizes = [[728, 90], [970, 90], [320, 50], [300, 250]],
+  sizeMapping = [],
   onAdStateChange
 }) {
   const slotRef = useRef(null);
@@ -93,9 +94,22 @@ export function GAMAdUnit({
       }
 
       // Define new slot
-      slotRef.current = googletag
-        .defineSlot(activeAdUnit, sizes, slotId)
-        .addService(googletag.pubads());
+      slotRef.current = googletag.defineSlot(activeAdUnit, sizes, slotId);
+
+      if (!slotRef.current) {
+        if (onAdStateChange) onAdStateChange('empty');
+        return;
+      }
+
+      if (sizeMapping.length) {
+        const mappingBuilder = googletag.sizeMapping();
+        sizeMapping.forEach(({ viewport, sizes: mappedSizes }) => {
+          mappingBuilder.addSize(viewport, mappedSizes);
+        });
+        slotRef.current.defineSizeMapping(mappingBuilder.build());
+      }
+
+      slotRef.current.addService(googletag.pubads());
 
       // Create event listener function
       listenerRef.current = (event) => {
@@ -143,7 +157,7 @@ export function GAMAdUnit({
       });
       displayedRef.current = false;
     };
-  }, [slotId, adUnitPath]);
+  }, [slotId, adUnitPath, sizes, sizeMapping, onAdStateChange]);
 
   // Return container div - always rendered (like reference site)
   return (
@@ -151,7 +165,7 @@ export function GAMAdUnit({
       ref={containerRef}
       id={slotId}
       style={{
-        minWidth: '300px',
+        minWidth: 0,
         minHeight: '50px',
         width: '100%',
         maxWidth: '100%',

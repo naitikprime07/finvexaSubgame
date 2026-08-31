@@ -1,5 +1,5 @@
-import { Link, useLocation } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+﻿import { Link, useLocation } from "react-router-dom";
+import { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { GAMAdUnit, GAMInterstitial } from "./gam-ads";
 
 const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
@@ -16,23 +16,18 @@ export function AdSlot({ className = "", label = "Advertisement" }) {
   // Use stable slot ID with useRef
   const slotIdRef = useRef(`gam-home-top-${++adSlotCounter}`);
 
-  // Mobile-first ad sizes (prioritize mobile banner ads)
-  const adSizes = [
-    [320, 100], // Mobile banner
-    [320, 50],  // Mobile small banner
-    [300, 250], // Mobile medium rectangle
-    [336, 280], // Large mobile banner
-    [728, 90],  // Desktop leaderboard
-    [970, 90],  // Desktop large leaderboard
-    [300, 600], // Desktop half-page
-    [160, 600]  // Desktop wide skyscraper
-  ];
+  const adSizes = useMemo(() => [[336, 600], [336, 280], [320, 100], [320, 50], [300, 250]], []);
+  const sizeMapping = useMemo(() => [
+    { viewport: [900, 0], sizes: [[336, 600]] },
+    { viewport: [336, 0], sizes: [[336, 280], [320, 100], [320, 50], [300, 250]] },
+    { viewport: [0, 0], sizes: [[320, 100], [320, 50], [300, 250]] }
+  ], []);
 
   if (!live) return null;
 
-  const handleAdStateChange = (state) => {
+  const handleAdStateChange = useCallback((state) => {
     setAdState(state);
-  };
+  }, []);
 
   // Like reference site - always render, GAMAdUnit handles visibility internally
   return (
@@ -45,6 +40,7 @@ export function AdSlot({ className = "", label = "Advertisement" }) {
         adUnitPath={adUnitPath}
         slotId={slotIdRef.current}
         sizes={adSizes}
+        sizeMapping={sizeMapping}
         onAdStateChange={handleAdStateChange}
       />
     </div>
@@ -236,23 +232,19 @@ export function Footer() {
   );
 }
 
-export function Shell({ children, ad = true, homeLayout = false }) {
+export function Shell({ children, ad = true, homeLayout = false, homeLeft }) {
   if (homeLayout) {
-    // Homepage: Vertical ad on left, content in middle, sticky visual on right
+    // Reference layout: all content scrolls in the left rail; the hero remains fixed on the right.
     return (
       <main className="home-layout">
         <aside className="home-left-column">
-          {ad && (
-            <div className="home-ad-slot">
-              <AdSlot className="vertical-ad" />
-            </div>
-          )}
-          {children}
+          {ad && <AdSlot className="home-ad-slot vertical-ad" />}
+          {homeLeft}
+          <Footer />
         </aside>
         <div className="home-right-column">
           <StickyVisual />
         </div>
-        <Footer />
       </main>
     );
   }

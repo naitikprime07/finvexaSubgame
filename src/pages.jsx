@@ -4,8 +4,8 @@ import { carArticles, healthArticles, pageMap } from "./siteData";
 
 const Para = ({ children }) => <p>{children}</p>;
 export function Home() {
-  return (
-    <Shell homeLayout={true}>
+  const leftColumn = (
+    <>
       <PromoCard>
         <h2>Play Free Games on 5minutes games</h2>
         <AdLink to="/play">Play Now</AdLink>
@@ -141,8 +141,10 @@ export function Home() {
           More
         </Link>
       </article>
-    </Shell>
+    </>
   );
+
+  return <Shell homeLayout={true} homeLeft={leftColumn} />;
 }
 
 function HubPage({ kind }) {
