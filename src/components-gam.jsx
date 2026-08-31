@@ -34,14 +34,23 @@ export function AdSlot({ className = "", label = "Advertisement" }) {
     setAdState(state);
   };
 
-  // Don't show anything if ad is empty
-  if (adState === 'empty') {
-    return null;
+  // Always render GAMAdUnit (hidden) so it can request ads
+  // Only show wrapper when ad actually fills
+  if (adState !== 'filled') {
+    return (
+      <div style={{ display: 'none' }}>
+        <GAMAdUnit
+          adUnitPath={adUnitPath}
+          slotId={slotIdRef.current}
+          sizes={adSizes}
+          onAdStateChange={handleAdStateChange}
+        />
+      </div>
+    );
   }
 
   return (
     <div className={`ad-space ${className}`} aria-label={label}>
-      <div className="ad-label-visible">ADVERTISEMENT</div>
       <GAMAdUnit
         adUnitPath={adUnitPath}
         slotId={slotIdRef.current}

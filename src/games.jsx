@@ -156,12 +156,22 @@ function GameAd({ name }) {
     setAdState(state);
   };
 
-  // Don't show anything if ad is empty or loading
+  // Always render GAMAdUnit (hidden) so it can request ads
+  // Only show wrapper when ad actually fills
   if (adState !== 'filled') {
-    return null;
+    return (
+      <div style={{ display: 'none' }}>
+        <GAMAdUnit
+          adUnitPath={adUnitPath}
+          slotId={slotIdRef.current}
+          sizes={adSizes}
+          onAdStateChange={handleAdStateChange}
+        />
+      </div>
+    );
   }
 
-  // Only show wrapper when ad is actually filled
+  // Show wrapper when ad is filled
   return (
     <aside
       className={`game-ad ${largeMobileSlot ? "game-ad-large" : "game-ad-banner"}`}
