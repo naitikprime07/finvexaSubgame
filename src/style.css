@@ -28,10 +28,10 @@ a {
 .site-shell {
   display: grid;
   grid-template-columns: 508px 840px;
-  gap: 292px;
-  max-width: 1664px;
+  gap: 60px;
+  max-width: 1416px;
   padding: 0 12px;
-  margin: 0;
+  margin: 0 auto;
   align-items: start
 }
 
@@ -42,10 +42,9 @@ a {
 
 .top-ad {
   width: 100%;
-  max-width: 100%;
   min-height: 50px;
-  margin: 12px auto 14px;
-  color: #a0a0a0
+  margin: 3px auto;
+  overflow: visible
 }
 
 .ad-space {
@@ -53,12 +52,6 @@ a {
   align-items: center;
   justify-content: center;
   overflow: visible
-}
-
-.ad-space span {
-  font-size: 10px;
-  letter-spacing: 1.5px;
-  text-transform: uppercase
 }
 
 .promo-card {
@@ -345,7 +338,7 @@ a {
   }
 }
 
-@media(max-width:900px) {
+@media(max-width:768px) {
   body {
     border: 0
   }
@@ -357,7 +350,7 @@ a {
   }
 
   .content-rail {
-    max-width: 508px;
+    max-width: 520px;
     margin: auto
   }
 
@@ -366,20 +359,7 @@ a {
   }
 
   .sticky-visual {
-    position: relative;
-    width: 100%;
-    min-height: 0;
-    padding-top: 20px
-  }
-
-  .sticky-visual>img {
-    width: 100%;
-    height: auto
-  }
-
-  .sticky-visual>div b,
-  .sticky-visual>div span {
-    white-space: normal
+    display: none
   }
 
   .site-footer {
@@ -2739,71 +2719,11 @@ html.interstitial-open body {
 }
 
 
-/* Main home-page mobile ad frame */
+/* Simplified mobile ad container */
 @media(max-width:600px) {
-  .content-rail .top-ad {
-    box-sizing: border-box;
-    width: 100%;
-    max-width: 100%;
+  .top-ad {
     min-height: 50px;
-    margin: 6px auto 14px;
-    padding: 0;
-    border: 0;
-    overflow: visible
-  }
-
-  .content-rail .top-ad>.test-ad {
-    width: 300px;
-    max-width: 100%;
-    height: 300px;
-    min-height: 300px;
-    margin: auto;
-    padding: 26px 18px 18px
-  }
-
-  .content-rail .top-ad>.adsbygoogle {
-    width: 300px !important;
-    max-width: 100%;
-    height: 300px;
-    min-height: 250px;
-    margin: auto
-  }
-
-  .content-rail .top-ad .test-ad-mark {
-    width: 72px;
-    height: 72px
-  }
-
-  .content-rail .top-ad .test-ad-vertical strong {
-    font-size: 26px
-  }
-
-  .content-rail .top-ad .test-ad-vertical p {
-    font-size: 15px;
-    line-height: 1.35
-  }
-
-  .content-rail .top-ad .test-ad-vertical>b {
-    padding: 10px 27px
-  }
-}
-
-@media(max-width:340px) {
-  .content-rail .top-ad {
-    width: 100%;
-    min-height: 50px;
-    padding: 0
-  }
-
-  .content-rail .top-ad>.test-ad {
-    width: 100%;
-    height: 280px;
-    min-height: 280px
-  }
-
-  .content-rail .top-ad>.adsbygoogle {
-    width: 100% !important;
-    height: 280px
+    margin: 3px 0
   }
 }
 
