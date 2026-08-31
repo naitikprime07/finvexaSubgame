@@ -36,7 +36,6 @@ export function GPTLoader() {
 
     script.onload = () => {
       googletag.cmd.push(() => {
-        // Use new API instead of deprecated collapseEmptyDivs
         googletag.pubads().set('page_url', window.location.href);
         googletag.enableServices();
         if (testMode) {
@@ -57,7 +56,7 @@ export function GPTLoader() {
   return null;
 }
 
-// GAM Ad Unit Component with proper empty state handling
+// GAM Ad Unit Component - Simplified like reference site
 export function GAMAdUnit({
   adUnitPath,
   slotId,
@@ -66,14 +65,14 @@ export function GAMAdUnit({
 }) {
   const slotRef = useRef(null);
   const listenerRef = useRef(null);
-  const [adState, setAdState] = useState('loading'); // 'loading' | 'filled' | 'empty'
+  const containerRef = useRef(null);
+  const displayedRef = useRef(false);
 
   useEffect(() => {
     const activeNetworkCode = testMode ? TEST_NETWORK_CODE : gamNetworkCode;
     const activeAdUnit = testMode ? TEST_AD_UNIT : adUnitPath;
 
     if (!adsEnabled || !activeNetworkCode || !activeAdUnit) {
-      setAdState('empty');
       if (onAdStateChange) onAdStateChange('empty');
       return;
     }
@@ -84,6 +83,7 @@ export function GAMAdUnit({
       // Clean up existing slot if any
       if (slotRef.current) {
         googletag.destroySlots([slotRef.current]);
+        slotRef.current = null;
       }
 
       // Define new slot
@@ -96,12 +96,18 @@ export function GAMAdUnit({
         if (event.slot === slotRef.current) {
           if (event.isEmpty) {
             logAd("Ad empty:", slotId, "| Path:", activeAdUnit);
-            setAdState('empty');
             if (onAdStateChange) onAdStateChange('empty');
+            // Hide container if ad is empty
+            if (containerRef.current) {
+              containerRef.current.style.display = 'none';
+            }
           } else {
             logAd("Ad filled:", slotId, "| Size:", event.size, "| Path:", activeAdUnit);
-            setAdState('filled');
             if (onAdStateChange) onAdStateChange('filled');
+            // Show container when ad fills
+            if (containerRef.current) {
+              containerRef.current.style.display = 'block';
+            }
           }
         }
       };
@@ -109,8 +115,11 @@ export function GAMAdUnit({
       // Add event listener
       googletag.pubads().addEventListener('slotRenderEnded', listenerRef.current);
 
-      // Display the ad
-      googletag.display(slotId);
+      // Display the ad (like reference site does inline)
+      if (!displayedRef.current) {
+        googletag.display(slotId);
+        displayedRef.current = true;
+      }
     });
 
     return () => {
@@ -126,22 +135,24 @@ export function GAMAdUnit({
           slotRef.current = null;
         }
       });
+      displayedRef.current = false;
     };
-  }, [slotId, adUnitPath]); // Re-run when slotId or adUnitPath changes
+  }, [slotId, adUnitPath]);
 
-  // Return container div that GPT needs
+  // Return container div - always rendered (like reference site)
   return (
     <div
+      ref={containerRef}
       id={slotId}
       style={{
-        display: adState === 'filled' ? 'block' : 'none',
-        minHeight: 'auto',
-        minWidth: 'auto',
+        minWidth: '300px',
+        minHeight: '50px',
         width: '100%',
         maxWidth: '100%',
         textAlign: 'center',
         margin: '0 auto',
-        overflow: 'visible'
+        overflow: 'visible',
+        display: 'block' // Start visible, hide only if empty
       }}
     ></div>
   );
@@ -151,14 +162,13 @@ export function GAMAdUnit({
 export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
   const slotRef = useRef(null);
   const listenerRef = useRef(null);
-  const [adState, setAdState] = useState('loading'); // 'loading' | 'filled' | 'empty'
+  const displayedRef = useRef(false);
 
   useEffect(() => {
     const activeNetworkCode = testMode ? TEST_NETWORK_CODE : gamNetworkCode;
     const activeAdUnit = testMode ? TEST_AD_UNIT : adUnitPath;
 
     if (!adsEnabled || !activeNetworkCode || !activeAdUnit) {
-      setAdState('empty');
       if (onEmptyStateChange) onEmptyStateChange(true);
       return;
     }
@@ -169,42 +179,40 @@ export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
       // Clean up existing slot
       if (slotRef.current) {
         googletag.destroySlots([slotRef.current]);
+        slotRef.current = null;
       }
 
-      // Define as regular display ad with mobile-first sizes
-      const interstitialSizes = [
-        [300, 250], // Mobile medium rectangle
-        [336, 280], // Large mobile banner
-        [320, 480], // Mobile interstitial
-        [300, 600], // Half-page
-        [320, 100], // Mobile banner
-        [320, 50]   // Mobile small banner
-      ];
+      // Define as out-of-page interstitial (like reference site)
+      slotRef.current = googletag.defineOutOfPageSlot(
+        activeAdUnit,
+        window.googletag.enums?.OutOfPageFormat?.INTERSTITIAL || slotId
+      );
 
-      slotRef.current = googletag
-        .defineSlot(activeAdUnit, interstitialSizes, slotId)
-        .addService(googletag.pubads());
+      if (slotRef.current) {
+        slotRef.current.addService(googletag.pubads());
 
-      // Create event listener
-      listenerRef.current = (event) => {
-        if (event.slot === slotRef.current) {
-          if (event.isEmpty) {
-            logAd("Interstitial empty:", slotId, "| Path:", activeAdUnit);
-            setAdState('empty');
-            if (onEmptyStateChange) onEmptyStateChange(true);
-          } else {
-            logAd("Interstitial filled:", slotId, "| Size:", event.size, "| Path:", activeAdUnit);
-            setAdState('filled');
-            if (onEmptyStateChange) onEmptyStateChange(false);
+        // Create event listener
+        listenerRef.current = (event) => {
+          if (event.slot === slotRef.current) {
+            if (event.isEmpty) {
+              logAd("Interstitial empty:", slotId, "| Path:", activeAdUnit);
+              if (onEmptyStateChange) onEmptyStateChange(true);
+            } else {
+              logAd("Interstitial filled:", slotId, "| Size:", event.size, "| Path:", activeAdUnit);
+              if (onEmptyStateChange) onEmptyStateChange(false);
+            }
           }
+        };
+
+        // Add event listener
+        googletag.pubads().addEventListener('slotRenderEnded', listenerRef.current);
+
+        // Display the ad
+        if (!displayedRef.current) {
+          googletag.display(slotRef.current);
+          displayedRef.current = true;
         }
-      };
-
-      // Add event listener
-      googletag.pubads().addEventListener('slotRenderEnded', listenerRef.current);
-
-      // Display the ad
-      googletag.display(slotId);
+      }
     });
 
     return () => {
@@ -220,22 +228,9 @@ export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
           slotRef.current = null;
         }
       });
+      displayedRef.current = false;
     };
   }, []);
 
-  return (
-    <div
-      id={slotId}
-      style={{
-        display: adState === 'filled' ? 'block' : 'none',
-        minHeight: 'auto',
-        minWidth: 'auto',
-        width: '100%',
-        maxWidth: '100%',
-        textAlign: 'center',
-        margin: '0 auto',
-        overflow: 'visible'
-      }}
-    ></div>
-  );
+  return null; // Interstitial renders itself as overlay
 }

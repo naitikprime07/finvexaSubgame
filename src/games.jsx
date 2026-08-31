@@ -156,26 +156,12 @@ function GameAd({ name }) {
     setAdState(state);
   };
 
-  // Always render GAMAdUnit (hidden) so it can request ads
-  // Only show wrapper when ad actually fills
-  if (adState !== 'filled') {
-    return (
-      <div style={{ display: 'none' }}>
-        <GAMAdUnit
-          adUnitPath={adUnitPath}
-          slotId={slotIdRef.current}
-          sizes={adSizes}
-          onAdStateChange={handleAdStateChange}
-        />
-      </div>
-    );
-  }
-
-  // Show wrapper when ad is filled
+  // Like reference site - always render, GAMAdUnit handles visibility internally
   return (
     <aside
       className={`game-ad ${largeMobileSlot ? "game-ad-large" : "game-ad-banner"}`}
       aria-label="Advertisement"
+      style={{ display: adState === 'empty' ? 'none' : 'block' }}
     >
       <div
         className="ad-slot-frame"
