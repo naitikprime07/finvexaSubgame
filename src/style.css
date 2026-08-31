@@ -72,64 +72,41 @@ a {
 
 /* Homepage-specific layout (vertical ad on left) */
 .home-layout {
-  display: grid;
-  grid-template-columns: 336px 1fr;
-  grid-template-rows: auto 1fr;
-  gap: 80px;
-  max-width: 1400px;
+  display: flex;
+  justify-content: center;
+  gap: 60px;
+  max-width: 1600px;
   margin: 0 auto;
   padding: 12px;
   align-items: start
 }
 
 .home-left-column {
-  grid-column: 1;
-  grid-row: 1;
+  flex: 0 0 auto;
   width: 336px;
-  display: flex;
-  flex-direction: column;
-  gap: 20px
+  max-width: 336px
 }
 
 .home-right-column {
-  grid-column: 2;
-  grid-row: 1;
+  flex: 1;
+  max-width: 840px;
   position: sticky;
   top: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh
-}
-
-.home-full-content {
-  grid-column: 1 / -1;
-  grid-row: 2;
-  max-width: 520px;
-  margin: 0 auto
+  padding-top: 38px
 }
 
 .home-ad-slot {
   width: 336px;
-  min-width: 336px;
   height: 600px;
-  min-height: 600px;
-  background: transparent;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  overflow: visible
+  overflow: visible;
+  margin-bottom: 20px
 }
 
 .vertical-ad {
   width: 100%;
   height: 100%;
-  min-height: 600px
-}
-
-.home-copy {
-  width: 100%
+  min-height: 600px;
+  overflow: visible
 }
 
 .button-row {
@@ -430,25 +407,20 @@ a {
 
   /* Homepage mobile layout */
   .home-layout {
-    display: block;
+    flex-direction: column;
     padding: 10px 12px;
-    max-width: 100%
+    gap: 20px
   }
 
   .home-left-column {
     width: 100%;
     max-width: 520px;
-    margin: 0 auto
+    margin: 0 auto;
+    order: 1
   }
 
   .home-right-column {
     display: none
-  }
-
-  .home-full-content {
-    width: 100%;
-    max-width: 520px;
-    margin: 20px auto 0
   }
 
   .home-ad-slot {

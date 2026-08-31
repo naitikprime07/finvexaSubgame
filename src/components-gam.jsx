@@ -236,7 +236,28 @@ export function Footer() {
   );
 }
 
-export function Shell({ children, ad = true }) {
+export function Shell({ children, ad = true, homeLayout = false }) {
+  if (homeLayout) {
+    // Homepage: Vertical ad on left, content in middle, sticky visual on right
+    return (
+      <main className="home-layout">
+        <aside className="home-left-column">
+          {ad && (
+            <div className="home-ad-slot">
+              <AdSlot className="vertical-ad" />
+            </div>
+          )}
+          {children}
+        </aside>
+        <div className="home-right-column">
+          <StickyVisual />
+        </div>
+        <Footer />
+      </main>
+    );
+  }
+
+  // Other pages: Top ad, content, sticky visual on right
   return (
     <main className="site-shell">
       <section className="content-rail">
