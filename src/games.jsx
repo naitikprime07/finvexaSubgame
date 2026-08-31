@@ -156,12 +156,14 @@ function GameAd({ name }) {
     setAdState(state);
   };
 
-  // Don't show anything if ad is empty
-  if (adState === 'empty') {
+  const debugMode = import.meta.env.VITE_ADS_DEBUG === "true";
+
+  // Don't show anything if ad is empty (unless debug mode)
+  if (adState === 'empty' && !debugMode) {
     return null;
   }
 
-  // Show wrapper with ADVERTISEMENT label (always visible when not empty)
+  // Show wrapper - visible during loading, when filled, and in debug mode
   return (
     <aside
       className={`game-ad ${largeMobileSlot ? "game-ad-large" : "game-ad-banner"}`}
@@ -180,6 +182,20 @@ function GameAd({ name }) {
           onAdStateChange={handleAdStateChange}
         />
       </div>
+      {(adState === 'loading' || adState === 'empty') && debugMode && (
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          color: '#888',
+          fontSize: '10px',
+          textAlign: 'center',
+          padding: '8px'
+        }}>
+          {adState === 'loading' ? 'Loading ad...' : `Ad Slot: ${name}\n${adUnitPath || 'No path'}`}
+        </div>
+      )}
     </aside>
   );
 }
