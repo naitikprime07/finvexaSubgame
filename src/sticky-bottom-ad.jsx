@@ -10,10 +10,21 @@ export function StickyBottomAd() {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [adLoaded, setAdLoaded] = useState(false);
   const [adVisible, setAdVisible] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const adUnitPath = import.meta.env.VITE_AD_ANCHOR || import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
   const slotIdRef = useRef(`gam-sticky-bottom-${++stickyAdCounter}`);
 
   const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
+
+  // Check if mobile device
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth <= 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Handle ad state change
   const handleAdStateChange = (state) => {
@@ -34,7 +45,7 @@ export function StickyBottomAd() {
     [336, 280], // Large mobile banner
   ];
 
-  if (!live) return null;
+  if (!live || !isMobile) return null;
 
   // Don't render anything if ad not loaded or user closed it
   if (!adLoaded || !adVisible || isCollapsed) return null;
