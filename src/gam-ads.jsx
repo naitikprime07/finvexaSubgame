@@ -127,7 +127,7 @@ export function GAMAdUnit({
         }
       });
     };
-  }, []);
+  }, [slotId, adUnitPath]); // Re-run when slotId or adUnitPath changes
 
   // Return container div that GPT needs
   return (
@@ -137,9 +137,11 @@ export function GAMAdUnit({
         display: adState === 'filled' ? 'block' : 'none',
         minHeight: 'auto',
         minWidth: 'auto',
+        width: '100%',
+        maxWidth: '100%',
         textAlign: 'center',
-        margin: '10px auto',
-        overflow: 'hidden'
+        margin: '0 auto',
+        overflow: 'visible'
       }}
     ></div>
   );
@@ -228,9 +230,11 @@ export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
         display: adState === 'filled' ? 'block' : 'none',
         minHeight: 'auto',
         minWidth: 'auto',
+        width: '100%',
+        maxWidth: '100%',
         textAlign: 'center',
         margin: '0 auto',
-        overflow: 'hidden'
+        overflow: 'visible'
       }}
     ></div>
   );

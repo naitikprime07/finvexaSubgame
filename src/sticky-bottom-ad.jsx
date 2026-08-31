@@ -1,18 +1,19 @@
 import { useState, useEffect, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { GAMAdUnit } from "./gam-ads";
 
 const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
 const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
 
-let stickyAdCounter = 0;
-
 export function StickyBottomAd() {
+  const location = useLocation();
   const [isCollapsed, setIsCollapsed] = useState(false);
-  const [adLoaded, setAdLoaded] = useState(false);
-  const [adVisible, setAdVisible] = useState(false);
+  const [adState, setAdState] = useState('loading');
   const [isMobile, setIsMobile] = useState(false);
-  const adUnitPath = import.meta.env.VITE_AD_ANCHOR || import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
-  const slotIdRef = useRef(`gam-sticky-bottom-${++stickyAdCounter}`);
+  const [key, setKey] = useState(0); // Force re-render on route change
+
+  const adUnitPath = import.meta.env.VITE_AD_ANCHOR || "";
+  const slotIdRef = useRef(`gam-sticky-bottom-${Date.now()}`);
 
   const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
 
@@ -26,15 +27,16 @@ export function StickyBottomAd() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Reset ad state on route change
+  useEffect(() => {
+    setAdState('loading');
+    setIsCollapsed(false);
+    setKey(prev => prev + 1); // Force new ad request
+  }, [location.pathname]);
+
   // Handle ad state change
   const handleAdStateChange = (state) => {
-    if (state === 'filled') {
-      setAdLoaded(true);
-      setAdVisible(true);
-    } else {
-      setAdLoaded(false);
-      setAdVisible(false);
-    }
+    setAdState(state);
   };
 
   // Mobile-optimized sticky ad sizes
@@ -45,10 +47,10 @@ export function StickyBottomAd() {
     [336, 280], // Large mobile banner
   ];
 
-  if (!live || !isMobile) return null;
-
-  // Don't render anything if ad not loaded or user closed it
-  if (!adLoaded || !adVisible || isCollapsed) return null;
+  // Don't render if not enabled, not mobile, collapsed, or ad empty/loading
+  if (!live || !isMobile || isCollapsed || adState !== 'filled') {
+    return null;
+  }
 
   return (
     <div className="sticky-bottom-ad-container">
@@ -57,7 +59,6 @@ export function StickyBottomAd() {
         className="sticky-ad-collapse-btn"
         onClick={() => {
           setIsCollapsed(true);
-          setAdVisible(false);
         }}
         aria-label="Close ad"
         title="Close ad"
@@ -73,8 +74,9 @@ export function StickyBottomAd() {
       {/* Ad slot */}
       <div className="sticky-ad-slot">
         <GAMAdUnit
+          key={key}
           adUnitPath={adUnitPath}
-          slotId={slotIdRef.current}
+          slotId={`${slotIdRef.current}-${key}`}
           sizes={stickyAdSizes}
           onAdStateChange={handleAdStateChange}
         />
