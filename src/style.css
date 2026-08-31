@@ -1037,7 +1037,7 @@ a {
   bottom: 10px
 }
 
-.game-card:after {
+.game-card:not([data-ad-placement]):after {
   content: 'PLAY';
   position: absolute;
   top: 17px;
@@ -1298,7 +1298,7 @@ a {
   bottom: 6px
 }
 
-.game-card:after {
+.game-card:not([data-ad-placement]):after {
   top: 13px;
   right: 13px
 }

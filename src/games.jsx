@@ -390,6 +390,7 @@ function coverFor(game) {
 }
 // Inline ad component that fits in game grid
 function InlineAd({ position }) {
+  const [adState, setAdState] = useState('loading');
   const adUnitPath = import.meta.env.VITE_AD_BANNER_CATALOG_MID || import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
   const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
   const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
@@ -403,18 +404,23 @@ function InlineAd({ position }) {
     { viewport: [0, 0], sizes: [[300, 250]] }
   ], [adSizes]);
 
+  const handleAdStateChange = useCallback((state) => {
+    setAdState(state);
+  }, []);
 
   if (!live) return null;
 
-  // Inline ad placement intentionally does not use game-card styling.
+  // Keep the original card geometry used by GAM, but mark it as an ad so
+  // game-only UI is never generated for this placement.
   return (
-    <div className="inline-ad-card" aria-label="Advertisement">
+    <div className={`game-card inline-ad-card is-${adState}`} data-ad-placement="inline" aria-label="Advertisement">
       <div className="game-ad-label">Advertisement</div>
       <GAMAdUnit
         adUnitPath={adUnitPath}
         slotId={slotIdRef.current}
         sizes={adSizes}
         sizeMapping={sizeMapping}
+        onAdStateChange={handleAdStateChange}
       />
     </div>
   );
