@@ -1,6 +1,6 @@
 ﻿import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect, useMemo, useCallback, useRef } from "react";
-import { GAMAdUnit, GAMInterstitial } from "./gam-ads";
+import { GAMAdUnit, GAMInterstitial, GAMRewarded } from "./gam-ads";
 
 const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
 const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
@@ -36,6 +36,7 @@ export function AdSlot({ className = "", label = "Advertisement" }) {
       aria-label={label}
       style={{ display: adState === 'empty' ? 'none' : 'block' }}
     >
+      <div className="game-ad-label">Advertisement</div>
       <GAMAdUnit
         adUnitPath={adUnitPath}
         slotId={slotIdRef.current}
@@ -148,6 +149,85 @@ export function InterstitialAd() {
   );
 }
 
+export function RewardedAd() {
+  const { pathname } = useLocation();
+  const isHome = pathname === "/" || pathname === "/index.html";
+  const adUnitPath = import.meta.env.VITE_AD_REWARD || "";
+  const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
+  const startedRef = useRef(false);
+  const showRewardedRef = useRef(null);
+  const [started, setStarted] = useState(false);
+  const [ready, setReady] = useState(false);
+  const [dismissed, setDismissed] = useState(
+    () => sessionStorage.getItem("finvexa-rewarded-dismissed-v1") === "true"
+  );
+
+  useEffect(() => {
+    if (!live || !isHome || dismissed || startedRef.current) return;
+    startedRef.current = true;
+    setStarted(true);
+  }, [live, isHome, dismissed]);
+
+  const handleReady = useCallback((showRewarded) => {
+    showRewardedRef.current = showRewarded;
+    setReady(true);
+  }, []);
+
+  const handleStateChange = useCallback((state) => {
+    if (state === "empty" || state === "unsupported") {
+      setReady(false);
+      return;
+    }
+    if (state === "granted" || state === "closed") {
+      sessionStorage.setItem("finvexa-rewarded-dismissed-v1", "true");
+      setDismissed(true);
+      setReady(false);
+    }
+  }, []);
+
+  const dismiss = () => {
+    sessionStorage.setItem("finvexa-rewarded-dismissed-v1", "true");
+    setDismissed(true);
+    setReady(false);
+  };
+
+  const watchAd = () => {
+    const showRewarded = showRewardedRef.current;
+    if (!showRewarded) return;
+    setReady(false);
+    try {
+      showRewarded();
+    } catch {
+      dismiss();
+    }
+  };
+
+  if (!live || dismissed) return null;
+
+  return (
+    <>
+      {started && (
+        <GAMRewarded
+          adUnitPath={adUnitPath}
+          onReady={handleReady}
+          onStateChange={handleStateChange}
+        />
+      )}
+      {ready && isHome && (
+        <div className="rewarded-backdrop" role="presentation">
+          <section className="rewarded-dialog" role="dialog" aria-modal="true" aria-labelledby="rewarded-title">
+            <button className="rewarded-close" type="button" onClick={dismiss} aria-label="Close rewarded advertisement">×</button>
+            <div className="rewarded-badge">🎁 Reward</div>
+            <h2 id="rewarded-title">Unlock your reward</h2>
+            <p>Watch a short advertisement to continue.</p>
+            <button className="rewarded-watch" type="button" onClick={watchAd}>▶ Watch ad and continue</button>
+            <small>You will see an advertisement in exchange for the reward.</small>
+          </section>
+        </div>
+      )}
+    </>
+  );
+}
 export function StickyVisual() {
   return (
     <aside className="sticky-visual">

@@ -155,6 +155,7 @@ function GameAd({ name }) {
       aria-label="Advertisement"
       style={{ display: adState === 'empty' ? 'none' : 'block' }}
     >
+      <div className="game-ad-label">Advertisement</div>
       <div
         className="ad-slot-frame"
         data-desktop-size="970x90"
@@ -412,17 +413,8 @@ function InlineAd({ position }) {
 
   // Inline ad card that looks like a game card but contains an ad
   return (
-    <div
-      className="game-card inline-ad-card"
-      style={{
-        display: adState === 'empty' ? 'none' : 'grid',
-        placeItems: 'center',
-        background: '#1a1a2e',
-        border: '1px solid #2a2a3e',
-        padding: '0',
-        overflow: 'hidden'
-      }}
-    >
+    <div className="game-card inline-ad-card" aria-label="Advertisement">
+      <div className="game-ad-label">Advertisement</div>
       <GAMAdUnit
         adUnitPath={adUnitPath}
         slotId={slotIdRef.current}

@@ -4,7 +4,7 @@ import { BrowserRouter, Navigate, Route, Routes, useLocation } from "react-route
 import "./style.css";
 import { Home, Hub, Article, Info, NotFound } from "./pages";
 import { GamePortal } from "./games";
-import { InterstitialAd } from "./components-gam";
+import { InterstitialAd, RewardedAd } from "./components-gam";
 import { GPTLoader } from "./gam-ads";
 import { StickyBottomAd } from "./sticky-bottom-ad";
 
@@ -88,6 +88,7 @@ function App() {
       </div>
       <ScrollToTop />
       <InterstitialAd />
+      <RewardedAd />
       <StickyBottomAd />
     </>
   );

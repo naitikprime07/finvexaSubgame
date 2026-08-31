@@ -1354,17 +1354,21 @@ a {
 .game-detail>h1,
 .game-detail>.play-area,
 .game-detail>.game-description-card {
-  width: min(1100px, 90%);
+  width: min(1100px, calc(100% - 32px));
   margin-left: auto;
   margin-right: auto
 }
 
 .game-detail>.game-ad {
-  width: min(970px, 90%)
+  width: min(970px, calc(100% - 32px));
+  margin-left: auto;
+  margin-right: auto
 }
 
 .game-detail>.catalog {
-  width: min(1680px, 94%)
+  width: min(1680px, calc(100% - 32px));
+  margin-left: auto;
+  margin-right: auto
 }
 
 /* Reference-style mobile category dropdown */
@@ -1940,6 +1944,48 @@ a {
 }
 
 @media(max-width:600px) {
+  .games-site,
+  .game-detail {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin-left: 0;
+    margin-right: 0
+  }
+
+  .games-site {
+    overflow-x: clip
+  }
+
+  .game-detail>h1,
+  .game-detail>.play-area,
+  .game-detail>.game-description-card {
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    margin-left: 0;
+    margin-right: 0
+  }
+
+  .game-detail>h1 {
+    margin-top: 22px;
+    margin-bottom: 22px;
+    padding: 0 12px
+  }
+
+  .game-detail>.catalog {
+    width: 100%;
+    max-width: 100%;
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 8px;
+    padding-right: 8px
+  }
+
+  .game-detail>.game-ad {
+    max-width: 100%
+  }
+
   .game-ad {
     width: 100%;
     margin: 18px 0;
@@ -3226,15 +3272,59 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
 
 
 /* Inline ad cards within game grid */
+.game-ad-label {
+  flex: none;
+  width: 100%;
+  min-height: 18px;
+  color: #8e8e9b;
+  text-align: center;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 18px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  pointer-events: none
+}
+
 .inline-ad-card {
+  grid-column: span 2;
+  grid-template-rows: 24px minmax(0, 1fr);
+  justify-items: center;
+  align-items: center;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 280px;
   aspect-ratio: auto !important;
-  min-height: 250px;
   display: grid;
-  place-items: center;
   background: #1a1a2e !important;
   border: 1px solid #2a2a3e !important;
   padding: 0 !important;
-  overflow: visible !important;
+  overflow: hidden !important;
+}
+
+.inline-ad-card::after {
+  display: none !important;
+  content: none !important
+}
+
+.inline-ad-card>.game-ad-label {
+  align-self: stretch;
+  line-height: 24px
+}
+
+.inline-ad-card>[id^="gam-inline"] {
+  width: 100% !important;
+  max-width: 336px !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.inline-ad-card iframe,
+.inline-ad-card ins {
+  display: block;
+  max-width: 100% !important;
+  margin: auto !important;
 }
 
 .inline-ad-card:hover {
@@ -3242,16 +3332,180 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
   box-shadow: none !important;
 }
 
-/* Span 2 columns on mobile/tablet */
-@media(max-width:800px) {
+@media(max-width:480px) {
   .inline-ad-card {
-    grid-column: span 2;
+    min-height: 250px;
+  }
+}
+/* Borderless advertisement presentation: the creative and disclosure label only. */
+.ad-space,
+.game-ad,
+.inline-ad-card,
+.sticky-bottom-ad-container,
+.sticky-ad-slot {
+  background: transparent !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  box-shadow: none !important;
+}
+
+.ad-space {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.top-ad,
+.home-ad-slot,
+.vertical-ad,
+.game-ad,
+.game-ad-large,
+.game-ad-banner,
+.ad-slot-frame,
+.game-ad-large .ad-slot-frame,
+.game-ad-banner .ad-slot-frame,
+.inline-ad-card,
+.sticky-ad-slot {
+  min-height: 0 !important;
+  height: auto;
+}
+
+.home-ad-slot {
+  margin-bottom: 8px;
+}
+
+.game-ad {
+  margin: 8px auto;
+  padding: 0 !important;
+}
+
+.inline-ad-card {
+  grid-template-rows: auto auto;
+  padding: 0 !important;
+}
+
+.inline-ad-card > .game-ad-label {
+  line-height: 18px;
+}
+
+.sticky-bottom-ad-container {
+  padding: 18px 0 0;
+}
+
+.sticky-ad-label {
+  top: 0;
+  left: 0;
+  right: 0;
+  padding: 0;
+  border-radius: 0;
+  color: #8e8e9b;
+  font-size: 9px;
+  font-weight: 500;
+  line-height: 18px;
+  letter-spacing: 4px;
+  text-align: center;
+}
+
+.sticky-ad-collapse-btn,
+.sticky-ad-collapse-btn:hover,
+.sticky-ad-collapse-btn:active {
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+@media (max-width: 600px) {
+  .game-ad {
+    margin: 8px 0;
+    padding: 0 !important;
+  }
+}
+/* Rewarded opt-in shown only after the GAM rewarded slot reports ready. */
+.rewarded-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 10020;
+  display: grid;
+  place-items: center;
+  padding: 18px;
+  background: rgba(5, 6, 14, .76);
+}
+
+.rewarded-dialog {
+  position: relative;
+  width: min(340px, 100%);
+  padding: 24px;
+  color: #f7f7fb;
+  text-align: center;
+  background: #20212b;
+  border: 1px solid rgba(255, 255, 255, .08);
+  border-radius: 14px;
+  box-shadow: 0 18px 55px rgba(0, 0, 0, .42);
+}
+
+.rewarded-dialog h2 {
+  margin: 16px 0 8px;
+  font-size: 20px;
+}
+
+.rewarded-dialog p {
+  margin: 0 0 20px;
+  color: #b7b7c1;
+  line-height: 1.45;
+}
+
+.rewarded-dialog small {
+  display: block;
+  margin-top: 14px;
+  color: #858590;
+}
+
+.rewarded-badge {
+  display: inline-flex;
+  padding: 6px 12px;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: .5px;
+  text-transform: uppercase;
+  background: #18b7ed;
+  border-radius: 999px;
+}
+
+.rewarded-close {
+  position: absolute;
+  top: 8px;
+  right: 10px;
+  padding: 4px 8px;
+  color: #aaaab4;
+  font-size: 22px;
+  line-height: 1;
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+}
+
+.rewarded-watch {
+  width: 100%;
+  min-height: 52px;
+  padding: 12px 16px;
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  background: linear-gradient(100deg, #6f3df4, #12bce9);
+  border: 0;
+  border-radius: 10px;
+  cursor: pointer;
+}
+
+@media (min-width: 970px) {
+  .sticky-bottom-ad-container {
+    width: min(972px, calc(100vw - 24px));
+    max-width: 972px;
   }
 }
 
-@media(max-width:480px) {
-  .inline-ad-card {
-    grid-column: span 2;
-    min-height: 200px;
-  }
+body:has(.sticky-bottom-ad-container.is-filled) .app-content {
+  padding-bottom: 110px;
 }

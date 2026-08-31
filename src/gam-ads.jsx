@@ -161,7 +161,7 @@ export function GAMAdUnit({
       id={slotId}
       style={{
         minWidth: 0,
-        minHeight: "50px",
+        minHeight: 0,
         width: "100%",
         maxWidth: "100%",
         textAlign: "center",
@@ -233,6 +233,81 @@ export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
       });
     };
   }, [adUnitPath, slotId]);
+
+  return null;
+}
+export function GAMRewarded({ adUnitPath, onReady, onStateChange }) {
+  const slotRef = useRef(null);
+  const listenersRef = useRef([]);
+  const readyRef = useRef(onReady);
+  const stateRef = useRef(onStateChange);
+
+  useEffect(() => { readyRef.current = onReady; }, [onReady]);
+  useEffect(() => { stateRef.current = onStateChange; }, [onStateChange]);
+
+  useEffect(() => {
+    const activeNetworkCode = gamNetworkCode;
+    const activeAdUnit = adUnitPath;
+
+    if (!adsEnabled || !activeNetworkCode || !activeAdUnit) {
+      stateRef.current?.("empty");
+      return undefined;
+    }
+
+    window.googletag = window.googletag || { cmd: [] };
+    googletag.cmd.push(() => {
+      const rewardedFormat = googletag.enums?.OutOfPageFormat?.REWARDED;
+      if (!rewardedFormat) {
+        stateRef.current?.("unsupported");
+        return;
+      }
+
+      slotRef.current = googletag.defineOutOfPageSlot(activeAdUnit, rewardedFormat);
+      if (!slotRef.current) {
+        stateRef.current?.("unsupported");
+        return;
+      }
+
+      slotRef.current.addService(googletag.pubads());
+      const listen = (name, handler) => {
+        googletag.pubads().addEventListener(name, handler);
+        listenersRef.current.push([name, handler]);
+      };
+
+      listen("slotRenderEnded", (event) => {
+        if (event.slot !== slotRef.current) return;
+        if (event.isEmpty) stateRef.current?.("empty");
+      });
+      listen("rewardedSlotReady", (event) => {
+        if (event.slot !== slotRef.current) return;
+        stateRef.current?.("ready");
+        readyRef.current?.(() => event.makeRewardedVisible());
+      });
+      listen("rewardedSlotGranted", (event) => {
+        if (event.slot !== slotRef.current) return;
+        stateRef.current?.("granted");
+      });
+      listen("rewardedSlotClosed", (event) => {
+        if (event.slot !== slotRef.current) return;
+        stateRef.current?.("closed");
+      });
+
+      googletag.display(slotRef.current);
+    });
+
+    return () => {
+      window.googletag?.cmd?.push(() => {
+        listenersRef.current.forEach(([name, handler]) => {
+          googletag.pubads().removeEventListener(name, handler);
+        });
+        listenersRef.current = [];
+        if (slotRef.current) {
+          googletag.destroySlots([slotRef.current]);
+          slotRef.current = null;
+        }
+      });
+    };
+  }, [adUnitPath]);
 
   return null;
 }
