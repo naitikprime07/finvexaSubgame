@@ -308,3 +308,34 @@ body:not(:has(.sticky-bottom-ad-container)) .game-frame {
   }
 }
 
+
+/* Inline ad cards within game grid */
+.inline-ad-card {
+  aspect-ratio: auto !important;
+  min-height: 250px;
+  display: grid;
+  place-items: center;
+  background: #1a1a2e !important;
+  border: 1px solid #2a2a3e !important;
+  padding: 0 !important;
+  overflow: visible !important;
+}
+
+.inline-ad-card:hover {
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Span 2 columns on mobile/tablet */
+@media(max-width:800px){
+  .inline-ad-card {
+    grid-column: span 2;
+  }
+}
+
+@media(max-width:480px){
+  .inline-ad-card {
+    grid-column: span 2;
+    min-height: 200px;
+  }
+}

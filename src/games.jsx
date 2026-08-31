@@ -395,30 +395,90 @@ function hueFor(text) {
 function coverFor(game) {
   return game.poster || game.screenshot || null;
 }
+// Inline ad component that fits in game grid
+function InlineAd({ position }) {
+  const [adState, setAdState] = useState('loading');
+  const adUnitPath = import.meta.env.VITE_AD_BANNER_CATALOG_MID || import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
+  const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
+  const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
+  const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
+
+  const slotIdRef = useRef(`gam-inline-${position}-${Math.random().toString(36).substr(2, 9)}`);
+
+  // Mobile and desktop ad sizes
+  const adSizes = [
+    [300, 250], // Medium rectangle
+    [336, 280], // Large mobile banner
+    [320, 100], // Mobile banner
+    [320, 50],  // Mobile small banner
+  ];
+
+  const handleAdStateChange = (state) => {
+    setAdState(state);
+  };
+
+  if (!live || adState === 'empty') return null;
+
+  // Inline ad card that looks like a game card but contains an ad
+  return (
+    <div
+      className="game-card inline-ad-card"
+      style={{
+        display: adState === 'empty' ? 'none' : 'grid',
+        placeItems: 'center',
+        background: '#1a1a2e',
+        border: '1px solid #2a2a3e',
+        padding: '0',
+        overflow: 'hidden'
+      }}
+    >
+      <GAMAdUnit
+        adUnitPath={adUnitPath}
+        slotId={slotIdRef.current}
+        sizes={adSizes}
+        onAdStateChange={handleAdStateChange}
+      />
+    </div>
+  );
+}
+
 function Cards({ items }) {
+  const itemsWithAds = [];
+  const AD_INTERVAL = 6; // Show ad after every 6 games
+
+  items.forEach((g, index) => {
+    // Add game card
+    itemsWithAds.push(
+      <Link className="game-card" key={g.slug} to={`/play/${g.slug}.html`}>
+        <div
+          className="local-cover"
+          style={{ "--game-hue": hueFor(g.slug) }}
+          aria-hidden="true"
+        >
+          {coverFor(g) && (
+            <img
+              src={coverFor(g)}
+              alt=""
+              loading="lazy"
+              onError={(e) => e.currentTarget.remove()}
+            />
+          )}
+          <b>{g.name.slice(0, 2).toUpperCase()}</b>
+          <i>▶</i>
+        </div>
+        <span>{g.name}</span>
+      </Link>
+    );
+
+    // Add inline ad after every AD_INTERVAL games
+    if ((index + 1) % AD_INTERVAL === 0 && index < items.length - 1) {
+      itemsWithAds.push(<InlineAd key={`ad-${index}`} position={index} />);
+    }
+  });
+
   return (
     <div className="game-grid">
-      {items.map((g) => (
-        <Link className="game-card" key={g.slug} to={`/play/${g.slug}.html`}>
-          <div
-            className="local-cover"
-            style={{ "--game-hue": hueFor(g.slug) }}
-            aria-hidden="true"
-          >
-            {coverFor(g) && (
-              <img
-                src={coverFor(g)}
-                alt=""
-                loading="lazy"
-                onError={(e) => e.currentTarget.remove()}
-              />
-            )}
-            <b>{g.name.slice(0, 2).toUpperCase()}</b>
-            <i>▶</i>
-          </div>
-          <span>{g.name}</span>
-        </Link>
-      ))}
+      {itemsWithAds}
     </div>
   );
 }

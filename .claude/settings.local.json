@@ -1,7 +1,7 @@
 {
   "permissions": {
     "allow": [
-      "Bash(git commit -m \"$(cat <<''EOF''\nFix GPT configuration and improve mobile view\n\n- Use googletag.setConfig() for modern GPT configuration\n- Maintain backward compatibility with pubads().set()\n- Ensure proper mobile responsive behavior\n- Ads loading successfully as shown in console logs\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
+      "Bash(git commit -m \"$(cat <<''EOF''\nImplement inline ads within game grid\n\n- Added InlineAd component that displays seamlessly in game grid\n- Modified Cards component to inject ads after every 6 games\n- Added VITE_AD_BANNER_CATALOG_MID environment variable\n- CSS makes inline ads span 2 columns on mobile\n- Matches reference site implementation\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []
