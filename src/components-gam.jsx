@@ -52,6 +52,9 @@ export function InterstitialAd() {
   const { pathname, key: routeKey } = useLocation();
   const detailRoute =
     /^\/en\/(carFinance|healthFinance)\/[^/]+(?:\/index\.html)?\/?$/i.test(pathname);
+  const isHome = pathname === "/" || pathname === "/index.html";
+  const rewardedPath = import.meta.env.VITE_AD_REWARD || "";
+  const rewardedOwnsHome = isHome && adsEnabled && Boolean(gamNetworkCode) && Boolean(rewardedPath);
 
   const [open, setOpen] = useState(
     () =>
@@ -115,7 +118,11 @@ export function InterstitialAd() {
   // Don't render anything if not enabled
   if (!liveAds) return null;
 
-  if (!open) return <div className="out-of-page-ad-label game-ad-label">Advertisement</div>;
+  // The rewarded placement owns the first main-page out-of-page opportunity.
+  // Never mount the interstitial behind it.
+  if (rewardedOwnsHome || !open) {
+    return <div className="out-of-page-ad-label game-ad-label">Advertisement</div>;
+  }
 
   // Render ad request in hidden container while checking if it fills
   if (!showOverlay) {
@@ -162,6 +169,8 @@ export function RewardedAd() {
   const showRewardedRef = useRef(null);
   const [started, setStarted] = useState(false);
   const [ready, setReady] = useState(false);
+  const [preloadFailed, setPreloadFailed] = useState(false);
+  const preloadFailedRef = useRef(false);
   const [dismissed, setDismissed] = useState(
     () => sessionStorage.getItem("finvexa-rewarded-dismissed-v1") === "true"
   );
@@ -173,12 +182,16 @@ export function RewardedAd() {
   }, [live, isHome, dismissed]);
 
   const handleReady = useCallback((showRewarded) => {
+    if (preloadFailedRef.current) return;
     showRewardedRef.current = showRewarded;
     setReady(true);
   }, []);
 
   const handleStateChange = useCallback((state) => {
-    if (state === "empty" || state === "unsupported") {
+    if (state === "empty" || state === "unsupported" || state === "timeout") {
+      preloadFailedRef.current = true;
+      showRewardedRef.current = null;
+      setPreloadFailed(true);
       setReady(false);
       return;
     }
@@ -188,6 +201,17 @@ export function RewardedAd() {
       setReady(false);
     }
   }, []);
+
+  useEffect(() => {
+    if (!started || ready || dismissed || preloadFailed) return undefined;
+    const timeoutId = window.setTimeout(() => {
+      preloadFailedRef.current = true;
+      showRewardedRef.current = null;
+      setPreloadFailed(true);
+      setReady(false);
+    }, 12000);
+    return () => window.clearTimeout(timeoutId);
+  }, [started, ready, dismissed, preloadFailed]);
 
   const dismiss = () => {
     sessionStorage.setItem("finvexa-rewarded-dismissed-v1", "true");
@@ -211,7 +235,7 @@ export function RewardedAd() {
   return (
     <>
       {isHome && <div className="out-of-page-ad-label game-ad-label">Advertisement</div>}
-      {!dismissed && started && (
+      {!dismissed && !preloadFailed && started && (
         <GAMRewarded
           adUnitPath={adUnitPath}
           onReady={handleReady}
