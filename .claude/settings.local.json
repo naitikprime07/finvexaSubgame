@@ -8,7 +8,9 @@
       "Bash(cat \"d:\\Game Web\\index.html\")",
       "Bash(cat games.jsx)",
       "Bash(git log --all --oneline --grep=\"interstitial\" -i)",
-      "Bash(cat src/gam-ads.jsx)"
+      "Bash(cat src/gam-ads.jsx)",
+      "Bash(git push)",
+      "Bash(git commit -m \"$(cat <<''EOF''\nHide advertisement labels from all ad placements\n\n🤖 Generated with [Claude Code](https://claude.com/claude-code)\n\nCo-Authored-By: Claude <noreply@anthropic.com>\nEOF\n)\")"
     ],
     "deny": [],
     "ask": []

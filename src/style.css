@@ -284,51 +284,27 @@ body:not(:has(.sticky-bottom-ad-container)) .game-frame {
    ============================================ */
 
 .ad-label-visible {
-  display: block !important;
-  width: 100%;
-  text-align: center;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: #999;
-  padding: 4px 0;
-  margin-bottom: 6px;
-  background: transparent;
+  display: none !important;
 }
 
-/* Make existing ad-label visible on all devices */
+/* Make existing ad-label hidden on all devices */
 .game-ad .ad-label {
-  display: block !important;
-  font-size: 9px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  color: #88838f;
-  text-align: center;
-  padding: 4px 0;
-  margin-bottom: 6px;
+  display: none !important;
 }
 
 /* Ad space label styling */
 .ad-space .ad-label-visible {
-  margin-top: 8px;
-  margin-bottom: 8px;
-  color: #a0a0a0;
+  display: none !important;
 }
 
 /* Game ad label positioning */
 .game-ad .ad-label-visible {
-  position: relative;
-  transform: none;
-  margin-bottom: 8px;
+  display: none !important;
 }
 
 @media (max-width: 600px) {
   .ad-label-visible {
-    font-size: 8px;
-    letter-spacing: 1.2px;
-    padding: 3px 0;
+    display: none !important;
   }
 }
 
