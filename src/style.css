@@ -42,7 +42,7 @@ a {
 
 .top-ad {
   width: 100%;
-  max-width: 970px;
+  max-width: 100%;
   min-height: 50px;
   margin: 12px auto 14px;
   color: #a0a0a0
