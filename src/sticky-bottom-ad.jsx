@@ -43,13 +43,12 @@ export function StickyBottomAd() {
     setAdState(state);
   }, []);
 
-  if (!live || isCollapsed) return null;
+  if (!live) return null;
 
   return (
     <aside
-      className={"sticky-bottom-ad-container is-" + adState}
+      className={`sticky-bottom-ad-container is-${isCollapsed ? "collapsed" : adState}`}
       aria-label="Advertisement"
-      aria-hidden={adState !== "filled"}
     >
       <button
         className="sticky-ad-collapse-btn"
@@ -64,7 +63,7 @@ export function StickyBottomAd() {
       </button>
 
       <div className="sticky-ad-label">Advertisement</div>
-      <div className="sticky-ad-slot">
+      {!isCollapsed && <div className="sticky-ad-slot">
         <GAMAdUnit
           key={slotId}
           adUnitPath={adUnitPath}
@@ -73,7 +72,7 @@ export function StickyBottomAd() {
           sizeMapping={sizeMapping}
           onAdStateChange={handleAdStateChange}
         />
-      </div>
+      </div>}
     </aside>
   );
 }

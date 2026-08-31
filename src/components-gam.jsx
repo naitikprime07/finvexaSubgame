@@ -34,7 +34,6 @@ export function AdSlot({ className = "", label = "Advertisement" }) {
     <div
       className={`ad-space ${className}`}
       aria-label={label}
-      style={{ display: adState === 'empty' ? 'none' : 'block' }}
     >
       <div className="game-ad-label">Advertisement</div>
       <GAMAdUnit
@@ -114,18 +113,23 @@ export function InterstitialAd() {
   };
 
   // Don't render anything if not enabled
-  if (!liveAds || !open) return null;
+  if (!liveAds) return null;
+
+  if (!open) return <div className="out-of-page-ad-label game-ad-label">Advertisement</div>;
 
   // Render ad request in hidden container while checking if it fills
   if (!showOverlay) {
     return (
-      <div style={{ display: 'none' }}>
-        <GAMInterstitial
-          adUnitPath={interstitialPath}
-          slotId={slotIdRef.current}
-          onEmptyStateChange={handleAdStateChange}
-        />
-      </div>
+      <>
+        <div className="out-of-page-ad-label game-ad-label">Advertisement</div>
+        <div style={{ display: 'none' }}>
+          <GAMInterstitial
+            adUnitPath={interstitialPath}
+            slotId={slotIdRef.current}
+            onEmptyStateChange={handleAdStateChange}
+          />
+        </div>
+      </>
     );
   }
 
@@ -202,18 +206,19 @@ export function RewardedAd() {
     }
   };
 
-  if (!live || dismissed) return null;
+  if (!live) return null;
 
   return (
     <>
-      {started && (
+      {isHome && <div className="out-of-page-ad-label game-ad-label">Advertisement</div>}
+      {!dismissed && started && (
         <GAMRewarded
           adUnitPath={adUnitPath}
           onReady={handleReady}
           onStateChange={handleStateChange}
         />
       )}
-      {ready && isHome && (
+      {!dismissed && ready && isHome && (
         <div className="rewarded-backdrop" role="presentation">
           <section className="rewarded-dialog" role="dialog" aria-modal="true" aria-labelledby="rewarded-title">
             <button className="rewarded-close" type="button" onClick={dismiss} aria-label="Close rewarded advertisement">×</button>

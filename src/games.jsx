@@ -1,4 +1,4 @@
-﻿import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { games, gameCategories } from "./gameData";
 import { GAMAdUnit } from "./gam-ads";
@@ -153,7 +153,6 @@ function GameAd({ name }) {
     <aside
       className={`game-ad ${largeMobileSlot ? "game-ad-large" : "game-ad-banner"}`}
       aria-label="Advertisement"
-      style={{ display: adState === 'empty' ? 'none' : 'block' }}
     >
       <div className="game-ad-label">Advertisement</div>
       <div
@@ -409,7 +408,7 @@ function InlineAd({ position }) {
     setAdState(state);
   }, []);
 
-  if (!live || adState === 'empty') return null;
+  if (!live) return null;
 
   // Inline ad card that looks like a game card but contains an ad
   return (

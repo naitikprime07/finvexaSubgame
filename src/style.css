@@ -3509,3 +3509,25 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
 body:has(.sticky-bottom-ad-container.is-filled) .app-content {
   padding-bottom: 110px;
 }
+/* Keep disclosure labels mounted independently of creative availability. */
+.out-of-page-ad-label {
+  width: 100%;
+  min-height: 18px;
+  margin: 0 auto;
+  background: transparent;
+  border: 0;
+}
+
+.sticky-bottom-ad-container.is-loading,
+.sticky-bottom-ad-container.is-empty,
+.sticky-bottom-ad-container.is-collapsed {
+  display: block;
+  visibility: visible;
+  pointer-events: none;
+}
+
+.sticky-bottom-ad-container.is-loading .sticky-ad-collapse-btn,
+.sticky-bottom-ad-container.is-empty .sticky-ad-collapse-btn,
+.sticky-bottom-ad-container.is-collapsed .sticky-ad-collapse-btn {
+  display: none;
+}
