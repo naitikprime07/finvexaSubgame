@@ -25,9 +25,9 @@ export function StickyBottomAd() {
   );
   const sizeMapping = useMemo(
     () => [
-      { viewport: [994, 0], sizes: [[970, 90], [728, 90]] },
-      { viewport: [744, 0], sizes: [[728, 90], [320, 100], [320, 50]] },
-      { viewport: [336, 0], sizes: [[320, 100], [320, 50]] },
+      { viewport: [970, 0], sizes: [[970, 90], [728, 90]] },
+      { viewport: [728, 0], sizes: [[728, 90], [320, 100], [320, 50]] },
+      { viewport: [320, 0], sizes: [[320, 100], [320, 50]] },
       { viewport: [0, 0], sizes: [[300, 50]] },
     ],
     []

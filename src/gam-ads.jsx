@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
 const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
@@ -13,26 +13,6 @@ const logAd = (...args) => {
 };
 
 let gptConfigured = false;
-let displayBatchTimer;
-const pendingDisplays = new Map();
-
-function queueGPTDisplay(key, target) {
-  pendingDisplays.set(key, target);
-  window.clearTimeout(displayBatchTimer);
-  displayBatchTimer = window.setTimeout(() => {
-    const batch = [...pendingDisplays.entries()];
-    pendingDisplays.clear();
-    window.googletag?.cmd?.push(() => {
-      batch.forEach(([, displayTarget]) => {
-        googletag.display(displayTarget);
-      });
-    });
-  }, 75);
-}
-
-function cancelQueuedDisplay(key) {
-  pendingDisplays.delete(key);
-}
 
 export function GPTLoader() {
   useEffect(() => {
@@ -41,30 +21,13 @@ export function GPTLoader() {
 
     window.googletag = window.googletag || { cmd: [] };
 
-    let retryTimer;
-    let retryCount = 0;
-    const loadGPTScript = () => {
-      if (window.googletag?.apiReady || document.querySelector('script[src*="gpt.js"]')) return;
+    if (!document.querySelector('script[src*="gpt.js"]')) {
       const script = document.createElement("script");
       script.async = true;
-      script.crossOrigin = "anonymous";
       script.src = "https://securepubads.g.doubleclick.net/tag/js/gpt.js";
-      script.onerror = () => {
-        script.remove();
-        retryCount += 1;
-        logAd("Failed to load GPT script", `attempt ${retryCount}`);
-        if (retryCount < 3) {
-          window.clearTimeout(retryTimer);
-          retryTimer = window.setTimeout(loadGPTScript, retryCount * 2500);
-        }
-      };
+      script.onerror = () => logAd("Failed to load GPT script");
       document.head.appendChild(script);
-    };
-    const retryWhenOnline = () => {
-      if (!window.googletag?.apiReady) loadGPTScript();
-    };
-    loadGPTScript();
-    window.addEventListener("online", retryWhenOnline);
+    }
 
     // This command is queued before display-slot effects because GPTLoader is
     // mounted first in App. Services are therefore configured exactly once.
@@ -75,16 +38,10 @@ export function GPTLoader() {
       });
       googletag.pubads().set("page_url", window.location.href);
       googletag.pubads().collapseEmptyDivs(true);
-      googletag.pubads().enableSingleRequest();
       googletag.enableServices();
       gptConfigured = true;
       logAd("GPT ready", testMode ? "(test mode)" : "", activeNetworkCode);
     });
-
-    return () => {
-      window.removeEventListener("online", retryWhenOnline);
-      window.clearTimeout(retryTimer);
-    };
   }, []);
 
   return null;
@@ -101,53 +58,47 @@ export function GAMAdUnit({
   const listenerRef = useRef(null);
   const containerRef = useRef(null);
   const callbackRef = useRef(onAdStateChange);
-  const getSizeBucket = () =>
-    sizeMapping.findIndex(({ viewport }) => window.innerWidth >= viewport[0]);
-  const [viewportBucket, setViewportBucket] = useState(getSizeBucket);
 
   useEffect(() => {
     callbackRef.current = onAdStateChange;
   }, [onAdStateChange]);
 
-  // Re-register the slot when responsive eligibility changes. A previously
-  // empty GPT slot may have collapsed its div, so refreshing that old slot is
-  // not reliable when switching between desktop and mobile size buckets.
-  useEffect(() => {
-    if (!sizeMapping.length) return undefined;
-    let resizeTimer;
-    const syncViewportBucket = () => {
-      window.clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(() => {
-        setViewportBucket((current) => {
-          const next = getSizeBucket();
-          return next === current ? current : next;
-        });
-      }, 200);
-    };
-    syncViewportBucket();
-    window.addEventListener("resize", syncViewportBucket);
-    window.visualViewport?.addEventListener("resize", syncViewportBucket);
-    return () => {
-      window.removeEventListener("resize", syncViewportBucket);
-      window.visualViewport?.removeEventListener("resize", syncViewportBucket);
-      window.clearTimeout(resizeTimer);
-    };
-  }, [sizeMapping]);
-
   useEffect(() => {
     const activeNetworkCode = testMode ? TEST_NETWORK_CODE : gamNetworkCode;
     const activeAdUnit = testMode ? TEST_AD_UNIT : adUnitPath;
+    let resizeTimer;
+    let activeSizeBucket = -1;
+
     if (!adsEnabled || !activeNetworkCode || !activeAdUnit) {
       callbackRef.current?.("empty");
       return undefined;
     }
 
-    if (containerRef.current) containerRef.current.style.display = "block";
-    callbackRef.current?.("loading");
+    const getSizeBucket = () =>
+      sizeMapping.findIndex(({ viewport }) => window.innerWidth >= viewport[0]);
+
+    const refreshForViewport = () => {
+      const nextSizeBucket = getSizeBucket();
+      if (nextSizeBucket === activeSizeBucket) return;
+      activeSizeBucket = nextSizeBucket;
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        window.googletag?.cmd?.push(() => {
+          if (!slotRef.current) return;
+          if (containerRef.current) containerRef.current.style.display = "block";
+          callbackRef.current?.("loading");
+          googletag.pubads().refresh([slotRef.current]);
+        });
+      }, 200);
+    };
+
     window.googletag = window.googletag || { cmd: [] };
+    activeSizeBucket = getSizeBucket();
+    if (sizeMapping.length) {
+      window.addEventListener("resize", refreshForViewport);
+    }
 
     googletag.cmd.push(() => {
-      googletag.pubads().set("page_url", window.location.href);
       slotRef.current = googletag.defineSlot(activeAdUnit, sizes, slotId);
 
       if (!slotRef.current) {
@@ -181,11 +132,13 @@ export function GAMAdUnit({
         "slotRenderEnded",
         listenerRef.current
       );
-      queueGPTDisplay(`static:${slotId}`, slotId);
+      googletag.display(slotId);
     });
 
     return () => {
-      cancelQueuedDisplay(`static:${slotId}`);
+      window.removeEventListener("resize", refreshForViewport);
+      window.clearTimeout(resizeTimer);
+
       window.googletag?.cmd?.push(() => {
         if (listenerRef.current) {
           googletag.pubads().removeEventListener(
@@ -200,7 +153,7 @@ export function GAMAdUnit({
         }
       });
     };
-  }, [slotId, adUnitPath, sizes, sizeMapping, viewportBucket]);
+  }, [slotId, adUnitPath, sizes, sizeMapping]);
 
   return (
     <div
@@ -261,11 +214,10 @@ export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
         "slotRenderEnded",
         listenerRef.current
       );
-      queueGPTDisplay(`interstitial:${slotId}`, slotRef.current);
+      googletag.display(slotRef.current);
     });
 
     return () => {
-      cancelQueuedDisplay(`interstitial:${slotId}`);
       window.googletag?.cmd?.push(() => {
         if (listenerRef.current) {
           googletag.pubads().removeEventListener(
@@ -340,11 +292,10 @@ export function GAMRewarded({ adUnitPath, onReady, onStateChange }) {
         stateRef.current?.("closed");
       });
 
-      queueGPTDisplay(`rewarded:${activeAdUnit}`, slotRef.current);
+      googletag.display(slotRef.current);
     });
 
     return () => {
-      cancelQueuedDisplay(`rewarded:${activeAdUnit}`);
       window.googletag?.cmd?.push(() => {
         listenersRef.current.forEach(([name, handler]) => {
           googletag.pubads().removeEventListener(name, handler);
