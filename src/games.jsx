@@ -119,9 +119,6 @@ function GameAd({ name }) {
     "detail-bottom": import.meta.env.VITE_AD_BANNER_GAME_BOTTOM || "",
   };
   const adUnitPath = slots[name] || "";
-  const mobileFallbackPath = import.meta.env.VITE_AD_BANNER_CATALOG_TOP || "";
-  const [useMobileFallback, setUseMobileFallback] = useState(false);
-  const requestedAdUnitPath = useMobileFallback ? mobileFallbackPath : adUnitPath;
   const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
   const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
   const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
@@ -150,17 +147,7 @@ function GameAd({ name }) {
 
   const handleAdStateChange = useCallback((state) => {
     setAdState(state);
-    const mobileWidth = window.visualViewport?.width || window.innerWidth;
-    if (
-      state === "empty" &&
-      mobileWidth <= 768 &&
-      !useMobileFallback &&
-      mobileFallbackPath &&
-      mobileFallbackPath !== adUnitPath
-    ) {
-      setUseMobileFallback(true);
-    }
-  }, [adUnitPath, mobileFallbackPath, useMobileFallback]);
+  }, []);
 
   // Like reference site - always render, GAMAdUnit handles visibility internally
   return (
@@ -175,7 +162,7 @@ function GameAd({ name }) {
         data-mobile-size={largeMobileSlot ? "336x280" : "320x100"}
       >
         <GAMAdUnit
-          adUnitPath={requestedAdUnitPath}
+          adUnitPath={adUnitPath}
           slotId={slotIdRef.current}
           sizes={adSizes}
           sizeMapping={sizeMapping}
@@ -405,10 +392,7 @@ function coverFor(game) {
 // Inline ad component that fits in game grid
 function InlineAd({ position }) {
   const [adState, setAdState] = useState('loading');
-  const adUnitPath = import.meta.env.VITE_AD_BANNER_CATALOG_MID || "";
-  const mobileFallbackPath = import.meta.env.VITE_AD_BANNER_CATALOG_TOP || import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
-  const [useMobileFallback, setUseMobileFallback] = useState(false);
-  const requestedAdUnitPath = useMobileFallback ? mobileFallbackPath : adUnitPath;
+  const adUnitPath = import.meta.env.VITE_AD_BANNER_CATALOG_MID || import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
   const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
   const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
   const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
@@ -423,17 +407,7 @@ function InlineAd({ position }) {
 
   const handleAdStateChange = useCallback((state) => {
     setAdState(state);
-    const mobileWidth = window.visualViewport?.width || window.innerWidth;
-    if (
-      state === "empty" &&
-      mobileWidth <= 768 &&
-      !useMobileFallback &&
-      mobileFallbackPath &&
-      mobileFallbackPath !== adUnitPath
-    ) {
-      setUseMobileFallback(true);
-    }
-  }, [adUnitPath, mobileFallbackPath, useMobileFallback]);
+  }, []);
 
   if (!live) return null;
 
@@ -443,7 +417,7 @@ function InlineAd({ position }) {
     <div className={`game-card inline-ad-card is-${adState}`} data-ad-placement="inline" aria-label="Advertisement">
       <div className="game-ad-label">Advertisement</div>
       <GAMAdUnit
-        adUnitPath={requestedAdUnitPath}
+        adUnitPath={adUnitPath}
         slotId={slotIdRef.current}
         sizes={adSizes}
         sizeMapping={sizeMapping}

@@ -13,6 +13,26 @@ const logAd = (...args) => {
 };
 
 let gptConfigured = false;
+let displayBatchTimer;
+const pendingDisplays = new Map();
+
+function queueGPTDisplay(key, target) {
+  pendingDisplays.set(key, target);
+  window.clearTimeout(displayBatchTimer);
+  displayBatchTimer = window.setTimeout(() => {
+    const batch = [...pendingDisplays.entries()];
+    pendingDisplays.clear();
+    window.googletag?.cmd?.push(() => {
+      batch.forEach(([, displayTarget]) => {
+        googletag.display(displayTarget);
+      });
+    });
+  }, 75);
+}
+
+function cancelQueuedDisplay(key) {
+  pendingDisplays.delete(key);
+}
 
 export function GPTLoader() {
   useEffect(() => {
@@ -55,6 +75,7 @@ export function GPTLoader() {
       });
       googletag.pubads().set("page_url", window.location.href);
       googletag.pubads().collapseEmptyDivs(true);
+      googletag.pubads().enableSingleRequest();
       googletag.enableServices();
       gptConfigured = true;
       logAd("GPT ready", testMode ? "(test mode)" : "", activeNetworkCode);
@@ -160,10 +181,11 @@ export function GAMAdUnit({
         "slotRenderEnded",
         listenerRef.current
       );
-      googletag.display(slotId);
+      queueGPTDisplay(`static:${slotId}`, slotId);
     });
 
     return () => {
+      cancelQueuedDisplay(`static:${slotId}`);
       window.googletag?.cmd?.push(() => {
         if (listenerRef.current) {
           googletag.pubads().removeEventListener(
@@ -239,10 +261,11 @@ export function GAMInterstitial({ adUnitPath, slotId, onEmptyStateChange }) {
         "slotRenderEnded",
         listenerRef.current
       );
-      googletag.display(slotRef.current);
+      queueGPTDisplay(`interstitial:${slotId}`, slotRef.current);
     });
 
     return () => {
+      cancelQueuedDisplay(`interstitial:${slotId}`);
       window.googletag?.cmd?.push(() => {
         if (listenerRef.current) {
           googletag.pubads().removeEventListener(
@@ -317,10 +340,11 @@ export function GAMRewarded({ adUnitPath, onReady, onStateChange }) {
         stateRef.current?.("closed");
       });
 
-      googletag.display(slotRef.current);
+      queueGPTDisplay(`rewarded:${activeAdUnit}`, slotRef.current);
     });
 
     return () => {
+      cancelQueuedDisplay(`rewarded:${activeAdUnit}`);
       window.googletag?.cmd?.push(() => {
         listenersRef.current.forEach(([name, handler]) => {
           googletag.pubads().removeEventListener(name, handler);

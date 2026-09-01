@@ -12,9 +12,6 @@ export function StickyBottomAd() {
 
   // This is the dedicated GAM unit for the bottom mobile anchor.
   const adUnitPath = import.meta.env.VITE_AD_ANCHOR || "";
-  const mobileFallbackPath = import.meta.env.VITE_AD_BANNER_CATALOG_TOP || "";
-  const [useMobileFallback, setUseMobileFallback] = useState(false);
-  const requestedAdUnitPath = useMobileFallback ? mobileFallbackPath : adUnitPath;
   const slotPrefixRef = useRef("gam-mobile-anchor");
   const routeKey = location.key || location.pathname;
   const safeRouteKey = routeKey.replace(/[^a-zA-Z0-9_-]/g, "-");
@@ -40,22 +37,11 @@ export function StickyBottomAd() {
   useEffect(() => {
     setAdState("loading");
     setIsCollapsed(false);
-    setUseMobileFallback(false);
   }, [location.key, location.pathname]);
 
   const handleAdStateChange = useCallback((state) => {
     setAdState(state);
-    const mobileWidth = window.visualViewport?.width || window.innerWidth;
-    if (
-      state === "empty" &&
-      mobileWidth <= 768 &&
-      !useMobileFallback &&
-      mobileFallbackPath &&
-      mobileFallbackPath !== adUnitPath
-    ) {
-      setUseMobileFallback(true);
-    }
-  }, [adUnitPath, mobileFallbackPath, useMobileFallback]);
+  }, []);
 
   if (!live) return null;
 
@@ -80,7 +66,7 @@ export function StickyBottomAd() {
       {!isCollapsed && <div className="sticky-ad-slot">
         <GAMAdUnit
           key={slotId}
-          adUnitPath={requestedAdUnitPath}
+          adUnitPath={adUnitPath}
           slotId={slotId}
           sizes={adSizes}
           sizeMapping={sizeMapping}
