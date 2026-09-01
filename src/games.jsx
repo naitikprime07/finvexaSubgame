@@ -392,7 +392,15 @@ function coverFor(game) {
 // Inline ad component that fits in game grid
 function InlineAd({ position }) {
   const [adState, setAdState] = useState('loading');
-  const adUnitPath = import.meta.env.VITE_AD_BANNER_CATALOG_MID || import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
+  const catalogTopPath = import.meta.env.VITE_AD_BANNER_CATALOG_TOP || "";
+  const configuredCatalogMidPath = import.meta.env.VITE_AD_BANNER_CATALOG_MID || "";
+  const gameMidPath = import.meta.env.VITE_AD_BANNER_GAME_MID || "";
+  // Some deployment environments still map CATALOG_MID to the top unit.
+  // Never duplicate the top unit for middle placements when the configured
+  // mid unit is available under the existing GAME_MID variable.
+  const adUnitPath = configuredCatalogMidPath && configuredCatalogMidPath !== catalogTopPath
+    ? configuredCatalogMidPath
+    : gameMidPath || configuredCatalogMidPath || import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
   const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
   const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
   const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
