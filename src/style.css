@@ -1347,11 +1347,14 @@ a {
     width: 95%;
     max-width: 100%;
     margin-top: 35px;
+    padding: 0 8px;
   }
 
   .game-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 9px
+    gap: 9px;
+    width: 100%;
+    max-width: 100%;
   }
 
   .cat-heading {
@@ -1365,7 +1368,9 @@ a {
 
 @media(max-width:480px) {
   .game-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr))
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+    max-width: 100%;
   }
 
   .game-pills button {
@@ -3332,6 +3337,15 @@ html.interstitial-open body {
   max-width: 100%;
 }
 
+/* Prevent inline ads from forcing grid expansion */
+.game-grid {
+  overflow: hidden;
+}
+
+.inline-ad-card {
+  contain: layout style;
+}
+
 /* Prevent horizontal overflow on mobile */
 @media (max-width: 768px) {
   /* Don't use overflow-x: hidden on body/html as it crops content */
@@ -3455,7 +3469,8 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
   background: #1a1a2e !important;
   border: 1px solid #2a2a3e !important;
   padding: 0 !important;
-  overflow: visible !important;
+  overflow: hidden !important;
+  box-sizing: border-box;
 }
 
 
@@ -3468,15 +3483,53 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
   width: 100% !important;
   max-width: 100% !important;
   min-width: 0 !important;
-  overflow: visible !important;
+  overflow: hidden !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .inline-ad-card iframe,
 .inline-ad-card ins,
-.inline-ad-card>div {
+.inline-ad-card>div,
+.inline-ad-card [id^="google_ads"] {
   display: block !important;
   max-width: 100% !important;
   margin: auto !important;
+}
+
+/* Scale down ads that are too wide for the container */
+.inline-ad-card [id^="google_ads_iframe"] {
+  transform-origin: center center;
+}
+
+/* Responsive scaling for inline ads on mobile */
+@media(max-width:800px) {
+  .inline-ad-card > [id^="gam-inline"] > div {
+    max-width: 100% !important;
+    transform: scale(1);
+    transform-origin: center;
+  }
+
+  /* Scale 300x250 ads on small grids */
+  .inline-ad-card > [id^="gam-inline"] > div[style*="width: 300px"],
+  .inline-ad-card > [id^="gam-inline"] > div[style*="width:300px"] {
+    transform: scale(0.95);
+  }
+}
+
+@media(max-width:480px) {
+  .inline-ad-card > [id^="gam-inline"] > div[style*="width: 300px"],
+  .inline-ad-card > [id^="gam-inline"] > div[style*="width:300px"] {
+    transform: scale(0.85);
+  }
+}
+
+@media(max-width:360px) {
+  .inline-ad-card > [id^="gam-inline"] > div[style*="width: 300px"],
+  .inline-ad-card > [id^="gam-inline"] > div[style*="width:300px"] {
+    transform: scale(0.75);
+  }
 }
 
 .inline-ad-card:hover {
@@ -3484,10 +3537,22 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
   box-shadow: none !important;
 }
 
+@media(max-width:800px) {
+  .inline-ad-card {
+    grid-column: span 3;
+  }
+}
+
 @media(max-width:480px) {
   .inline-ad-card {
-    grid-column: span 1;
+    grid-column: span 2;
     min-height: 0;
+  }
+}
+
+@media(max-width:360px) {
+  .inline-ad-card {
+    grid-column: span 1;
   }
 }
 /* Borderless advertisement presentation: the creative and disclosure label only. */
