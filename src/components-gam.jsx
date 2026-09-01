@@ -16,11 +16,12 @@ export function AdSlot({ className = "", label = "Advertisement" }) {
   // Use stable slot ID with useRef
   const slotIdRef = useRef(`gam-home-top-${++adSlotCounter}`);
 
-  const adSizes = useMemo(() => [[336, 600], [336, 280], [320, 100], [320, 50], [300, 250]], []);
+  const adSizes = useMemo(() => [[336, 600], [336, 280], [320, 100], [320, 50], [300, 250], [300, 100]], []);
   const sizeMapping = useMemo(() => [
-    { viewport: [900, 0], sizes: [[336, 600]] },
-    { viewport: [336, 0], sizes: [[336, 280], [320, 100], [320, 50], [300, 250]] },
-    { viewport: [0, 0], sizes: [[320, 100], [320, 50], [300, 250]] }
+    { viewport: [520, 0], sizes: [[336, 600], [336, 280]] },
+    { viewport: [340, 0], sizes: [[336, 280], [320, 100], [320, 50], [300, 250]] },
+    { viewport: [320, 0], sizes: [[320, 100], [320, 50], [300, 250]] },
+    { viewport: [0, 0], sizes: [[300, 100], [300, 250], [320, 50]] }
   ], []);
 
   if (!live) return null;

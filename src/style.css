@@ -42,15 +42,20 @@ a {
 
 .top-ad {
   width: 100%;
-  min-height: 50px;
+  max-width: 100%;
+  min-height: 0;
   margin: 3px auto;
   overflow: visible
 }
 
 .ad-space {
+  position: relative;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
+  width: 100%;
+  max-width: 100%;
   overflow: visible
 }
 
@@ -102,15 +107,18 @@ a {
 }
 
 .home-ad-slot {
-  width: 336px;
-  height: 600px;
-  overflow: hidden;
+  width: 100%;
+  max-width: 336px;
+  height: auto;
+  overflow: visible;
   margin: 0 auto 20px
 }
 
 .vertical-ad {
+  width: 100%;
   max-width: 100%;
-  min-height: 600px
+  min-height: 0;
+  height: auto
 }
 
 .home-right-column .sticky-visual {
@@ -452,16 +460,17 @@ a {
 
   .home-ad-slot {
     width: 100%;
+    max-width: 336px;
     height: auto;
     min-height: 0;
-    max-height: 280px;
-    overflow: hidden
+    margin: 0 auto 20px;
+    overflow: visible
   }
 
   .vertical-ad {
     min-height: 0;
     height: auto;
-    max-height: 280px
+    max-width: 100%
   }
 
 }
@@ -1888,8 +1897,8 @@ a {
 .game-ad {
   position: relative;
   box-sizing: border-box;
-  width: min(970px, calc(100% - 32px));
-  min-height: 90px;
+  width: min(970px, 100%);
+  min-height: 0;
   margin: 22px auto;
   padding: 12px;
   display: flex;
@@ -1917,7 +1926,7 @@ a {
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 90px;
+  min-height: 0;
   height: auto;
   max-width: 100%;
   overflow: visible;
@@ -1929,6 +1938,7 @@ a {
 .ad-slot-frame>div {
   display: block !important;
   max-width: 100% !important;
+  height: auto !important;
   margin: auto !important
 }
 
@@ -1938,7 +1948,7 @@ a {
 }
 
 .game-detail>.game-ad {
-  width: min(970px, calc(100% - 32px));
+  width: min(970px, 100%);
   margin-left: auto;
   margin-right: auto
 }
@@ -1983,13 +1993,15 @@ a {
   }
 
   .game-detail>.game-ad {
+    width: 100%;
     max-width: 100%
   }
 
   .game-ad {
     width: 100%;
+    max-width: 100%;
     margin: 18px 0;
-    padding: 16px 12px;
+    padding: 12px;
     background: #16052d;
     border: 0;
     border-top: 1px solid #ff5a24;
@@ -2002,27 +2014,27 @@ a {
   }
 
   .game-ad-large {
-    min-height: 300px;
-    padding: 20px 12px
+    min-height: 0;
+    padding: 12px
   }
 
   .game-ad-large .ad-slot-frame {
     width: 100%;
-    max-width: 336px;
-    min-height: 280px;
+    max-width: 100%;
+    min-height: 0;
     height: auto;
     background: transparent
   }
 
   .game-ad-banner {
-    min-height: 120px;
-    padding: 16px 12px
+    min-height: 0;
+    padding: 12px
   }
 
   .game-ad-banner .ad-slot-frame {
     width: 100%;
-    max-width: 320px;
-    min-height: 100px;
+    max-width: 100%;
+    min-height: 0;
     height: auto;
     background: transparent
   }
@@ -2040,11 +2052,12 @@ a {
 
 @media(max-width:359px) {
   .game-ad {
-    padding: 12px 8px
+    padding: 8px
   }
 
-  .game-ad-large .ad-slot-frame {
-    min-height: 250px
+  .game-ad-large .ad-slot-frame,
+  .game-ad-banner .ad-slot-frame {
+    max-width: 100%
   }
 }
 
@@ -3057,12 +3070,13 @@ html.interstitial-open body {
 .sticky-bottom-ad-container {
   position: fixed;
   bottom: 0;
+  bottom: env(safe-area-inset-bottom, 0);
   left: 50%;
   transform: translateX(-50%);
   z-index: 9998;
 
   /* Layout */
-  width: min(322px, calc(100vw - 12px));
+  width: calc(100vw - 12px);
   max-width: 322px;
 
   /* Visual styling */
@@ -3075,6 +3089,7 @@ html.interstitial-open body {
 
   /* Padding for content */
   padding: 28px 0 0;
+  padding-bottom: env(safe-area-inset-bottom, 0);
 
 }
 
@@ -3182,7 +3197,7 @@ html.interstitial-open body {
 .sticky-ad-slot {
   position: relative;
   width: 100%;
-  min-height: 50px;
+  min-height: 0;
 
   /* Center ad content */
   display: flex;
@@ -3190,7 +3205,7 @@ html.interstitial-open body {
   justify-content: center;
 
   /* Ensure ad doesn't overflow */
-  overflow: hidden;
+  overflow: visible;
   border-radius: 6px;
   background: #ffffff;
 }
@@ -3200,7 +3215,7 @@ html.interstitial-open body {
 .sticky-ad-slot iframe,
 .sticky-ad-slot ins {
   max-width: 100% !important;
-  max-height: 100% !important;
+  height: auto !important;
   margin: 0 auto !important;
   display: block !important;
 }
@@ -3208,19 +3223,28 @@ html.interstitial-open body {
 /* Mobile adjustments */
 @media (max-width: 360px) {
   .sticky-bottom-ad-container {
-    width: calc(100vw - 12px);
-    padding: 26px 0 0;
+    width: calc(100vw - 8px);
+    max-width: 100%;
+    padding: 22px 0 0;
   }
 
   .sticky-ad-collapse-btn {
-    left: 6px;
-    width: 26px;
-    height: 18px;
+    left: 4px;
+    width: 24px;
+    height: 16px;
   }
 
   .sticky-ad-collapse-btn svg {
-    width: 14px;
-    height: 14px;
+    width: 12px;
+    height: 12px;
+  }
+}
+
+/* Very small mobile screens */
+@media (max-width: 320px) {
+  .sticky-bottom-ad-container {
+    width: calc(100vw - 4px);
+    padding: 20px 0 0;
   }
 }
 
@@ -3228,7 +3252,89 @@ html.interstitial-open body {
 @media (min-width: 600px) {
   .sticky-bottom-ad-container {
     max-width: 730px;
-    width: min(730px, calc(100vw - 16px));
+    width: calc(100vw - 16px);
+  }
+}
+
+/* Desktop and large tablets */
+@media (min-width: 970px) {
+  .sticky-bottom-ad-container {
+    max-width: 972px;
+    width: calc(100vw - 24px);
+  }
+}
+
+/* Landscape mobile devices */
+@media (max-height: 500px) and (orientation: landscape) {
+  .sticky-bottom-ad-container {
+    max-width: 728px;
+  }
+
+  .game-ad,
+  .ad-space {
+    margin-top: 4px;
+    margin-bottom: 4px;
+  }
+}
+
+/* Portrait mode optimization */
+@media (orientation: portrait) and (max-width: 600px) {
+  .home-ad-slot,
+  .vertical-ad {
+    max-width: min(336px, calc(100vw - 24px));
+  }
+}
+
+/* Ensure Google Ad Manager iframes scale properly on all devices */
+[id^="google_ads_iframe"],
+[id^="gam-"] iframe,
+.ad-slot-frame iframe,
+.sticky-ad-slot iframe,
+ins.adsbygoogle {
+  max-width: 100% !important;
+  height: auto !important;
+  object-fit: contain;
+}
+
+/* Ensure all ad containers are properly constrained */
+[id^="gam-"],
+[id*="ad-slot"],
+[id*="ad_iframe"] {
+  max-width: 100%;
+  overflow: visible;
+}
+
+/* Prevent horizontal overflow on mobile */
+@media (max-width: 768px) {
+  body, html {
+    overflow-x: hidden;
+  }
+
+  [id^="google_ads_iframe"],
+  [id^="gam-"],
+  .ad-space,
+  .game-ad,
+  .ad-slot-frame,
+  .sticky-ad-slot {
+    max-width: 100vw !important;
+  }
+
+  /* Extra small screens */
+  @media (max-width: 360px) {
+    .ad-space,
+    .game-ad,
+    .top-ad {
+      padding-left: 4px;
+      padding-right: 4px;
+    }
+  }
+}
+
+/* Responsive ad scaling for different aspect ratios */
+@media (max-width: 768px) and (min-aspect-ratio: 13/9) {
+  /* Wide mobile screens in landscape */
+  .sticky-bottom-ad-container {
+    max-width: 90vw;
   }
 }
 
@@ -3288,19 +3394,19 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
 
 .inline-ad-card {
   grid-column: span 2;
-  grid-template-rows: 24px minmax(0, 1fr);
+  grid-template-rows: auto auto;
   justify-items: center;
   align-items: center;
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  min-height: 280px;
+  min-height: 0;
   aspect-ratio: auto !important;
   display: grid;
   background: #1a1a2e !important;
   border: 1px solid #2a2a3e !important;
   padding: 0 !important;
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 
@@ -3311,15 +3417,17 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
 
 .inline-ad-card>[id^="gam-inline"] {
   width: 100% !important;
-  max-width: 336px !important;
+  max-width: 100% !important;
   min-width: 0 !important;
-  overflow: hidden !important;
+  overflow: visible !important;
 }
 
 .inline-ad-card iframe,
-.inline-ad-card ins {
-  display: block;
+.inline-ad-card ins,
+.inline-ad-card>div {
+  display: block !important;
   max-width: 100% !important;
+  height: auto !important;
   margin: auto !important;
 }
 
@@ -3330,7 +3438,8 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
 
 @media(max-width:480px) {
   .inline-ad-card {
-    min-height: 250px;
+    grid-column: span 1;
+    min-height: 0;
   }
 }
 /* Borderless advertisement presentation: the creative and disclosure label only. */
@@ -3349,6 +3458,7 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  overflow: visible;
 }
 
 .top-ad,
@@ -3363,7 +3473,8 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
 .inline-ad-card,
 .sticky-ad-slot {
   min-height: 0 !important;
-  height: auto;
+  height: auto !important;
+  overflow: visible !important;
 }
 
 .home-ad-slot {
@@ -3386,6 +3497,7 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
 
 .sticky-bottom-ad-container {
   padding: 18px 0 0;
+  overflow: visible;
 }
 
 .sticky-ad-label {
@@ -3493,13 +3605,6 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
   border: 0;
   border-radius: 10px;
   cursor: pointer;
-}
-
-@media (min-width: 970px) {
-  .sticky-bottom-ad-container {
-    width: min(972px, calc(100vw - 24px));
-    max-width: 972px;
-  }
 }
 
 body:has(.sticky-bottom-ad-container.is-filled) .app-content {

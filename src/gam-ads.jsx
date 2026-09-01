@@ -179,6 +179,7 @@ export function GAMAdUnit({
       ref={containerRef}
       id={slotId}
       style={{
+        position: "relative",
         minWidth: 0,
         minHeight: 0,
         width: "100%",
@@ -186,7 +187,9 @@ export function GAMAdUnit({
         textAlign: "center",
         margin: "0 auto",
         overflow: "visible",
-        display: "block",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     />
   );

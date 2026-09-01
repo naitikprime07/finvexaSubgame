@@ -21,15 +21,16 @@ export function StickyBottomAd() {
   const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
 
   const adSizes = useMemo(
-    () => [[970, 90], [728, 90], [320, 100], [320, 50], [300, 50]],
+    () => [[970, 90], [728, 90], [468, 60], [320, 100], [320, 50], [300, 50]],
     []
   );
   const sizeMapping = useMemo(
     () => [
-      { viewport: [970, 0], sizes: [[970, 90], [728, 90]] },
-      { viewport: [728, 0], sizes: [[728, 90], [320, 100], [320, 50]] },
-      { viewport: [336, 0], sizes: [[320, 100], [320, 50], [728, 90], [970, 90]] },
-      { viewport: [0, 0], sizes: [[300, 50], [728, 90], [970, 90]] },
+      { viewport: [970, 0], sizes: [[970, 90]] },
+      { viewport: [728, 0], sizes: [[728, 90]] },
+      { viewport: [468, 0], sizes: [[468, 60], [320, 100], [320, 50]] },
+      { viewport: [320, 0], sizes: [[320, 100], [320, 50]] },
+      { viewport: [0, 0], sizes: [[300, 50], [320, 50]] },
     ],
     []
   );
