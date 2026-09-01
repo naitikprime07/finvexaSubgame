@@ -119,6 +119,9 @@ function GameAd({ name }) {
     "detail-bottom": import.meta.env.VITE_AD_BANNER_GAME_BOTTOM || "",
   };
   const adUnitPath = slots[name] || "";
+  const mobileFallbackPath = import.meta.env.VITE_AD_BANNER_CATALOG_TOP || "";
+  const [useMobileFallback, setUseMobileFallback] = useState(false);
+  const requestedAdUnitPath = useMobileFallback ? mobileFallbackPath : adUnitPath;
   const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
   const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
   const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
@@ -134,7 +137,7 @@ function GameAd({ name }) {
   const mobileSizes = useMemo(() => (
     largeMobileSlot
       ? [[336, 280], [300, 250]]
-      : [[320, 100], [320, 50], [300, 50]]
+      : [[320, 100], [320, 50], [300, 250], [300, 50]]
   ), [largeMobileSlot]);
   const desktopSizes = useMemo(() => [[970, 90], [728, 90]], []);
   const adSizes = useMemo(() => [...desktopSizes, ...mobileSizes], [desktopSizes, mobileSizes]);
@@ -142,12 +145,22 @@ function GameAd({ name }) {
     { viewport: [1002, 0], sizes: desktopSizes },
     { viewport: [769, 0], sizes: [[728, 90]] },
     { viewport: [336, 0], sizes: mobileSizes },
-    { viewport: [0, 0], sizes: largeMobileSlot ? [[300, 250]] : [[300, 50]] }
+    { viewport: [0, 0], sizes: largeMobileSlot ? [[300, 250]] : [[300, 250], [300, 50]] }
   ], [desktopSizes, largeMobileSlot, mobileSizes]);
 
   const handleAdStateChange = useCallback((state) => {
     setAdState(state);
-  }, []);
+    const mobileWidth = window.visualViewport?.width || window.innerWidth;
+    if (
+      state === "empty" &&
+      mobileWidth <= 768 &&
+      !useMobileFallback &&
+      mobileFallbackPath &&
+      mobileFallbackPath !== adUnitPath
+    ) {
+      setUseMobileFallback(true);
+    }
+  }, [adUnitPath, mobileFallbackPath, useMobileFallback]);
 
   // Like reference site - always render, GAMAdUnit handles visibility internally
   return (
@@ -162,7 +175,7 @@ function GameAd({ name }) {
         data-mobile-size={largeMobileSlot ? "336x280" : "320x100"}
       >
         <GAMAdUnit
-          adUnitPath={adUnitPath}
+          adUnitPath={requestedAdUnitPath}
           slotId={slotIdRef.current}
           sizes={adSizes}
           sizeMapping={sizeMapping}
@@ -392,7 +405,10 @@ function coverFor(game) {
 // Inline ad component that fits in game grid
 function InlineAd({ position }) {
   const [adState, setAdState] = useState('loading');
-  const adUnitPath = import.meta.env.VITE_AD_BANNER_CATALOG_MID || import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
+  const adUnitPath = import.meta.env.VITE_AD_BANNER_CATALOG_MID || "";
+  const mobileFallbackPath = import.meta.env.VITE_AD_BANNER_CATALOG_TOP || import.meta.env.VITE_AD_BANNER_HOME_TOP || "";
+  const [useMobileFallback, setUseMobileFallback] = useState(false);
+  const requestedAdUnitPath = useMobileFallback ? mobileFallbackPath : adUnitPath;
   const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
   const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
   const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
@@ -407,7 +423,17 @@ function InlineAd({ position }) {
 
   const handleAdStateChange = useCallback((state) => {
     setAdState(state);
-  }, []);
+    const mobileWidth = window.visualViewport?.width || window.innerWidth;
+    if (
+      state === "empty" &&
+      mobileWidth <= 768 &&
+      !useMobileFallback &&
+      mobileFallbackPath &&
+      mobileFallbackPath !== adUnitPath
+    ) {
+      setUseMobileFallback(true);
+    }
+  }, [adUnitPath, mobileFallbackPath, useMobileFallback]);
 
   if (!live) return null;
 
@@ -417,7 +443,7 @@ function InlineAd({ position }) {
     <div className={`game-card inline-ad-card is-${adState}`} data-ad-placement="inline" aria-label="Advertisement">
       <div className="game-ad-label">Advertisement</div>
       <GAMAdUnit
-        adUnitPath={adUnitPath}
+        adUnitPath={requestedAdUnitPath}
         slotId={slotIdRef.current}
         sizes={adSizes}
         sizeMapping={sizeMapping}
