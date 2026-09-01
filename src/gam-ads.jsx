@@ -187,9 +187,7 @@ export function GAMAdUnit({
         textAlign: "center",
         margin: "0 auto",
         overflow: "visible",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        display: "block",
       }}
     />
   );

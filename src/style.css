@@ -108,8 +108,7 @@ a {
 
 .home-ad-slot {
   width: 100%;
-  max-width: 336px;
-  height: auto;
+  max-width: 100%;
   overflow: visible;
   margin: 0 auto 20px
 }
@@ -117,8 +116,7 @@ a {
 .vertical-ad {
   width: 100%;
   max-width: 100%;
-  min-height: 0;
-  height: auto
+  min-height: 0
 }
 
 .home-right-column .sticky-visual {
@@ -460,8 +458,7 @@ a {
 
   .home-ad-slot {
     width: 100%;
-    max-width: 336px;
-    height: auto;
+    max-width: 100%;
     min-height: 0;
     margin: 0 auto 20px;
     overflow: visible
@@ -469,7 +466,6 @@ a {
 
   .vertical-ad {
     min-height: 0;
-    height: auto;
     max-width: 100%
   }
 
@@ -1938,7 +1934,6 @@ a {
 .ad-slot-frame>div {
   display: block !important;
   max-width: 100% !important;
-  height: auto !important;
   margin: auto !important
 }
 
@@ -3215,7 +3210,6 @@ html.interstitial-open body {
 .sticky-ad-slot iframe,
 .sticky-ad-slot ins {
   max-width: 100% !important;
-  height: auto !important;
   margin: 0 auto !important;
   display: block !important;
 }
@@ -3281,19 +3275,9 @@ html.interstitial-open body {
 @media (orientation: portrait) and (max-width: 600px) {
   .home-ad-slot,
   .vertical-ad {
-    max-width: min(336px, calc(100vw - 24px));
+    max-width: 100%;
+    padding: 0 8px;
   }
-}
-
-/* Ensure Google Ad Manager iframes scale properly on all devices */
-[id^="google_ads_iframe"],
-[id^="gam-"] iframe,
-.ad-slot-frame iframe,
-.sticky-ad-slot iframe,
-ins.adsbygoogle {
-  max-width: 100% !important;
-  height: auto !important;
-  object-fit: contain;
 }
 
 /* Ensure all ad containers are properly constrained */
@@ -3302,12 +3286,20 @@ ins.adsbygoogle {
 [id*="ad_iframe"] {
   max-width: 100%;
   overflow: visible;
+  box-sizing: border-box;
+}
+
+/* Scale ads to fit smaller viewports while preserving aspect ratio */
+[id^="gam-"] > * {
+  max-width: 100%;
+  height: auto;
 }
 
 /* Prevent horizontal overflow on mobile */
 @media (max-width: 768px) {
   body, html {
     overflow-x: hidden;
+    max-width: 100vw;
   }
 
   [id^="google_ads_iframe"],
@@ -3317,24 +3309,44 @@ ins.adsbygoogle {
   .ad-slot-frame,
   .sticky-ad-slot {
     max-width: 100vw !important;
+    box-sizing: border-box;
   }
 
-  /* Extra small screens */
-  @media (max-width: 360px) {
-    .ad-space,
-    .game-ad,
-    .top-ad {
-      padding-left: 4px;
-      padding-right: 4px;
+  /* Allow ads to scale down on very small screens */
+  [id^="gam-"] {
+    transform-origin: top center;
+  }
+
+  @media (max-width: 340px) {
+    /* Scale down oversized ads on very small screens */
+    [id^="gam-"] > div[style*="width: 336px"],
+    [id^="gam-"] > div[style*="width:336px"] {
+      transform: scale(0.88);
+      transform-origin: top center;
+    }
+
+    [id^="gam-"] > div[style*="width: 320px"],
+    [id^="gam-"] > div[style*="width:320px"] {
+      transform: scale(0.94);
+      transform-origin: top center;
     }
   }
-}
 
-/* Responsive ad scaling for different aspect ratios */
-@media (max-width: 768px) and (min-aspect-ratio: 13/9) {
-  /* Wide mobile screens in landscape */
-  .sticky-bottom-ad-container {
-    max-width: 90vw;
+  @media (max-width: 300px) {
+    [id^="gam-"] > div[style*="width: 336px"],
+    [id^="gam-"] > div[style*="width:336px"] {
+      transform: scale(0.75);
+    }
+
+    [id^="gam-"] > div[style*="width: 320px"],
+    [id^="gam-"] > div[style*="width:320px"] {
+      transform: scale(0.80);
+    }
+
+    [id^="gam-"] > div[style*="width: 300px"],
+    [id^="gam-"] > div[style*="width:300px"] {
+      transform: scale(0.85);
+    }
   }
 }
 
@@ -3427,7 +3439,6 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
 .inline-ad-card>div {
   display: block !important;
   max-width: 100% !important;
-  height: auto !important;
   margin: auto !important;
 }
 
@@ -3473,7 +3484,6 @@ body:has(.sticky-bottom-ad-container.is-filled) .game-frame {
 .inline-ad-card,
 .sticky-ad-slot {
   min-height: 0 !important;
-  height: auto !important;
   overflow: visible !important;
 }
 
