@@ -141,9 +141,9 @@ function GameAd({ name }) {
   const sizeMapping = useMemo(() => [
     { viewport: [1002, 0], sizes: desktopSizes },
     { viewport: [769, 0], sizes: [[728, 90]] },
-    { viewport: [336, 0], sizes: mobileSizes },
-    { viewport: [0, 0], sizes: largeMobileSlot ? [[300, 250]] : [[300, 250], [300, 50]] }
-  ], [desktopSizes, largeMobileSlot, mobileSizes]);
+    { viewport: [336, 0], sizes: largeMobileSlot ? mobileSizes : adSizes },
+    { viewport: [0, 0], sizes: largeMobileSlot ? [[300, 250]] : adSizes }
+  ], [adSizes, desktopSizes, largeMobileSlot, mobileSizes]);
 
   const handleAdStateChange = useCallback((state) => {
     setAdState(state);
@@ -407,10 +407,10 @@ function InlineAd({ position }) {
 
   const slotIdRef = useRef(`gam-inline-${position}-${Math.random().toString(36).substr(2, 9)}`);
 
-  const adSizes = useMemo(() => [[336, 280], [300, 250], [320, 100], [320, 50]], []);
+  const adSizes = useMemo(() => [[336, 280], [300, 250], [320, 100], [320, 50], [728, 90], [970, 90]], []);
   const sizeMapping = useMemo(() => [
     { viewport: [360, 0], sizes: adSizes },
-    { viewport: [0, 0], sizes: [[300, 250], [300, 50]] }
+    { viewport: [0, 0], sizes: adSizes }
   ], [adSizes]);
 
   const handleAdStateChange = useCallback((state) => {
