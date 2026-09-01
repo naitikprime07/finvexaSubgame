@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
 const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
@@ -21,13 +21,30 @@ export function GPTLoader() {
 
     window.googletag = window.googletag || { cmd: [] };
 
-    if (!document.querySelector('script[src*="gpt.js"]')) {
+    let retryTimer;
+    let retryCount = 0;
+    const loadGPTScript = () => {
+      if (window.googletag?.apiReady || document.querySelector('script[src*="gpt.js"]')) return;
       const script = document.createElement("script");
       script.async = true;
+      script.crossOrigin = "anonymous";
       script.src = "https://securepubads.g.doubleclick.net/tag/js/gpt.js";
-      script.onerror = () => logAd("Failed to load GPT script");
+      script.onerror = () => {
+        script.remove();
+        retryCount += 1;
+        logAd("Failed to load GPT script", `attempt ${retryCount}`);
+        if (retryCount < 3) {
+          window.clearTimeout(retryTimer);
+          retryTimer = window.setTimeout(loadGPTScript, retryCount * 2500);
+        }
+      };
       document.head.appendChild(script);
-    }
+    };
+    const retryWhenOnline = () => {
+      if (!window.googletag?.apiReady) loadGPTScript();
+    };
+    loadGPTScript();
+    window.addEventListener("online", retryWhenOnline);
 
     // This command is queued before display-slot effects because GPTLoader is
     // mounted first in App. Services are therefore configured exactly once.
@@ -42,6 +59,11 @@ export function GPTLoader() {
       gptConfigured = true;
       logAd("GPT ready", testMode ? "(test mode)" : "", activeNetworkCode);
     });
+
+    return () => {
+      window.removeEventListener("online", retryWhenOnline);
+      window.clearTimeout(retryTimer);
+    };
   }, []);
 
   return null;
@@ -58,47 +80,53 @@ export function GAMAdUnit({
   const listenerRef = useRef(null);
   const containerRef = useRef(null);
   const callbackRef = useRef(onAdStateChange);
+  const getSizeBucket = () =>
+    sizeMapping.findIndex(({ viewport }) => window.innerWidth >= viewport[0]);
+  const [viewportBucket, setViewportBucket] = useState(getSizeBucket);
 
   useEffect(() => {
     callbackRef.current = onAdStateChange;
   }, [onAdStateChange]);
 
+  // Re-register the slot when responsive eligibility changes. A previously
+  // empty GPT slot may have collapsed its div, so refreshing that old slot is
+  // not reliable when switching between desktop and mobile size buckets.
+  useEffect(() => {
+    if (!sizeMapping.length) return undefined;
+    let resizeTimer;
+    const syncViewportBucket = () => {
+      window.clearTimeout(resizeTimer);
+      resizeTimer = window.setTimeout(() => {
+        setViewportBucket((current) => {
+          const next = getSizeBucket();
+          return next === current ? current : next;
+        });
+      }, 200);
+    };
+    syncViewportBucket();
+    window.addEventListener("resize", syncViewportBucket);
+    window.visualViewport?.addEventListener("resize", syncViewportBucket);
+    return () => {
+      window.removeEventListener("resize", syncViewportBucket);
+      window.visualViewport?.removeEventListener("resize", syncViewportBucket);
+      window.clearTimeout(resizeTimer);
+    };
+  }, [sizeMapping]);
+
   useEffect(() => {
     const activeNetworkCode = testMode ? TEST_NETWORK_CODE : gamNetworkCode;
     const activeAdUnit = testMode ? TEST_AD_UNIT : adUnitPath;
-    let resizeTimer;
-    let activeSizeBucket = -1;
-
     if (!adsEnabled || !activeNetworkCode || !activeAdUnit) {
       callbackRef.current?.("empty");
       return undefined;
     }
 
-    const getSizeBucket = () =>
-      sizeMapping.findIndex(({ viewport }) => window.innerWidth >= viewport[0]);
-
-    const refreshForViewport = () => {
-      const nextSizeBucket = getSizeBucket();
-      if (nextSizeBucket === activeSizeBucket) return;
-      activeSizeBucket = nextSizeBucket;
-      window.clearTimeout(resizeTimer);
-      resizeTimer = window.setTimeout(() => {
-        window.googletag?.cmd?.push(() => {
-          if (!slotRef.current) return;
-          if (containerRef.current) containerRef.current.style.display = "block";
-          callbackRef.current?.("loading");
-          googletag.pubads().refresh([slotRef.current]);
-        });
-      }, 200);
-    };
-
+    if (containerRef.current) containerRef.current.style.display = "block";
+    callbackRef.current?.("loading");
     window.googletag = window.googletag || { cmd: [] };
-    activeSizeBucket = getSizeBucket();
-    if (sizeMapping.length) {
-      window.addEventListener("resize", refreshForViewport);
-    }
 
     googletag.cmd.push(() => {
+      googletag.pubads().set("page_url", window.location.href);
       slotRef.current = googletag.defineSlot(activeAdUnit, sizes, slotId);
 
       if (!slotRef.current) {
@@ -136,9 +164,6 @@ export function GAMAdUnit({
     });
 
     return () => {
-      window.removeEventListener("resize", refreshForViewport);
-      window.clearTimeout(resizeTimer);
-
       window.googletag?.cmd?.push(() => {
         if (listenerRef.current) {
           googletag.pubads().removeEventListener(
@@ -153,7 +178,7 @@ export function GAMAdUnit({
         }
       });
     };
-  }, [slotId, adUnitPath, sizes, sizeMapping]);
+  }, [slotId, adUnitPath, sizes, sizeMapping, viewportBucket]);
 
   return (
     <div

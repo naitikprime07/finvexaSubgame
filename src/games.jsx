@@ -139,7 +139,8 @@ function GameAd({ name }) {
   const desktopSizes = useMemo(() => [[970, 90], [728, 90]], []);
   const adSizes = useMemo(() => [...desktopSizes, ...mobileSizes], [desktopSizes, mobileSizes]);
   const sizeMapping = useMemo(() => [
-    { viewport: [769, 0], sizes: desktopSizes },
+    { viewport: [1002, 0], sizes: desktopSizes },
+    { viewport: [769, 0], sizes: [[728, 90]] },
     { viewport: [336, 0], sizes: mobileSizes },
     { viewport: [0, 0], sizes: largeMobileSlot ? [[300, 250]] : [[300, 50]] }
   ], [desktopSizes, largeMobileSlot, mobileSizes]);
@@ -400,8 +401,8 @@ function InlineAd({ position }) {
 
   const adSizes = useMemo(() => [[336, 280], [300, 250], [320, 100], [320, 50]], []);
   const sizeMapping = useMemo(() => [
-    { viewport: [336, 0], sizes: adSizes },
-    { viewport: [0, 0], sizes: [[300, 250]] }
+    { viewport: [360, 0], sizes: adSizes },
+    { viewport: [0, 0], sizes: [[300, 250], [300, 50]] }
   ], [adSizes]);
 
   const handleAdStateChange = useCallback((state) => {
