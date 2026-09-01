@@ -30,9 +30,11 @@ a {
   grid-template-columns: 508px 840px;
   gap: 60px;
   max-width: 1416px;
+  width: 100%;
   padding: 0 12px;
   margin: 0 auto;
-  align-items: start
+  align-items: start;
+  box-sizing: border-box;
 }
 
 .content-rail {
@@ -80,10 +82,12 @@ a {
   display: grid;
   grid-template-columns: 520px minmax(0, 1fr);
   width: 100%;
+  max-width: 100vw;
   height: 100vh;
   margin: 0;
   overflow: hidden;
-  align-items: stretch
+  align-items: stretch;
+  box-sizing: border-box;
 }
 
 .home-left-column {
@@ -437,10 +441,12 @@ a {
   .home-layout {
     display: block;
     width: 100%;
+    max-width: 100vw;
     height: auto;
     min-height: 100vh;
     padding: 10px 12px;
-    overflow: visible
+    overflow: visible;
+    box-sizing: border-box;
   }
 
   .home-left-column {
@@ -504,10 +510,13 @@ a {
 /* Games portal */
 .games-site {
   min-height: 100vh;
+  max-width: 100vw;
   background: #14052c;
   color: #fff;
   font-family: Montserrat, Arial, sans-serif;
-  line-height: 1.55
+  line-height: 1.55;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .game-header {
@@ -656,7 +665,9 @@ a {
 
 .catalog {
   width: 90%;
-  margin: 25px auto 45px
+  max-width: 100%;
+  margin: 25px auto 45px;
+  box-sizing: border-box;
 }
 
 .game-category {
@@ -687,7 +698,10 @@ a {
 .game-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-  gap: 22px
+  gap: 22px;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .game-card {
@@ -698,7 +712,10 @@ a {
   background: #1a1a2e;
   box-shadow: 0 5px 20px #0007;
   text-decoration: none;
-  transition: .25s
+  transition: .25s;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
 }
 
 .game-card:hover {
@@ -883,7 +900,8 @@ a {
   }
 
   .catalog {
-    width: 94%
+    width: 94%;
+    max-width: 100%;
   }
 
   .cat-heading {
@@ -1240,7 +1258,9 @@ a {
 
 .catalog {
   width: min(1680px, 94%);
-  margin: 55px auto
+  max-width: 100%;
+  margin: 55px auto;
+  box-sizing: border-box;
 }
 
 .game-category {
@@ -1271,7 +1291,9 @@ a {
 
 .game-grid {
   grid-template-columns: repeat(6, minmax(0, 1fr));
-  gap: 12px
+  gap: 12px;
+  width: 100%;
+  max-width: 100%;
 }
 
 .game-card {
@@ -1323,7 +1345,8 @@ a {
 @media(max-width:800px) {
   .catalog {
     width: 95%;
-    margin-top: 35px
+    max-width: 100%;
+    margin-top: 35px;
   }
 
   .game-grid {
@@ -1959,7 +1982,7 @@ a {
   }
 
   .games-site {
-    overflow-x: clip
+    max-width: 100vw;
   }
 
   .game-detail>h1,
@@ -3295,10 +3318,24 @@ html.interstitial-open body {
   height: auto;
 }
 
+/* Ensure all major containers respect viewport boundaries */
+.games-site *,
+.catalog *,
+.game-grid *,
+.game-category * {
+  box-sizing: border-box;
+}
+
+.catalog,
+.game-category,
+.game-grid {
+  max-width: 100%;
+}
+
 /* Prevent horizontal overflow on mobile */
 @media (max-width: 768px) {
+  /* Don't use overflow-x: hidden on body/html as it crops content */
   body, html {
-    overflow-x: hidden;
     max-width: 100vw;
   }
 
