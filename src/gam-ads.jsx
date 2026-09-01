@@ -53,6 +53,7 @@ export function GAMAdUnit({
   sizes = [[728, 90], [970, 90], [320, 50], [300, 250]],
   sizeMapping = [],
   onAdStateChange,
+  fallbackAdUnitPath = "",
 }) {
   const slotRef = useRef(null);
   const listenerRef = useRef(null);
@@ -66,8 +67,11 @@ export function GAMAdUnit({
   useEffect(() => {
     const activeNetworkCode = testMode ? TEST_NETWORK_CODE : gamNetworkCode;
     const activeAdUnit = testMode ? TEST_AD_UNIT : adUnitPath;
+    const activeFallbackUnit = testMode ? "" : fallbackAdUnitPath;
     let resizeTimer;
+    let fallbackTimer;
     let activeSizeBucket = -1;
+    let disposed = false;
 
     if (!adsEnabled || !activeNetworkCode || !activeAdUnit) {
       callbackRef.current?.("empty");
@@ -92,16 +96,22 @@ export function GAMAdUnit({
       }, 200);
     };
 
-    window.googletag = window.googletag || { cmd: [] };
-    activeSizeBucket = getSizeBucket();
-    if (sizeMapping.length) {
-      window.addEventListener("resize", refreshForViewport);
-    }
+    const removeCurrentSlot = () => {
+      if (listenerRef.current) {
+        googletag.pubads().removeEventListener("slotRenderEnded", listenerRef.current);
+        listenerRef.current = null;
+      }
+      if (slotRef.current) {
+        googletag.destroySlots([slotRef.current]);
+        slotRef.current = null;
+      }
+    };
 
-    googletag.cmd.push(() => {
-      slotRef.current = googletag.defineSlot(activeAdUnit, sizes, slotId);
-
-      if (!slotRef.current) {
+    const defineAndDisplay = (unitPath, isFallback = false) => {
+      if (disposed) return;
+      const slot = googletag.defineSlot(unitPath, sizes, slotId);
+      slotRef.current = slot;
+      if (!slot) {
         callbackRef.current?.("empty");
         return;
       }
@@ -111,49 +121,58 @@ export function GAMAdUnit({
         sizeMapping.forEach(({ viewport, sizes: mappedSizes }) => {
           mappingBuilder.addSize(viewport, mappedSizes);
         });
-        slotRef.current.defineSizeMapping(mappingBuilder.build());
+        slot.defineSizeMapping(mappingBuilder.build());
       }
+      slot.addService(googletag.pubads());
 
-      slotRef.current.addService(googletag.pubads());
+      const listener = (event) => {
+        if (event.slot !== slot) return;
 
-      listenerRef.current = (event) => {
-        if (event.slot !== slotRef.current) return;
+        if (
+          event.isEmpty &&
+          !isFallback &&
+          activeFallbackUnit &&
+          activeFallbackUnit !== unitPath
+        ) {
+          logAd("Ad empty; retrying fallback", slotId, activeFallbackUnit);
+          removeCurrentSlot();
+          if (containerRef.current) {
+            containerRef.current.replaceChildren();
+            containerRef.current.style.display = "block";
+          }
+          callbackRef.current?.("loading");
+          fallbackTimer = window.setTimeout(() => {
+            window.googletag?.cmd?.push(() => defineAndDisplay(activeFallbackUnit, true));
+          }, 0);
+          return;
+        }
 
         const nextState = event.isEmpty ? "empty" : "filled";
         logAd("Ad", nextState, slotId, event.size || "");
         callbackRef.current?.(nextState);
-
         if (containerRef.current) {
           containerRef.current.style.display = event.isEmpty ? "none" : "block";
         }
       };
 
-      googletag.pubads().addEventListener(
-        "slotRenderEnded",
-        listenerRef.current
-      );
+      listenerRef.current = listener;
+      googletag.pubads().addEventListener("slotRenderEnded", listener);
       googletag.display(slotId);
-    });
+    };
+
+    window.googletag = window.googletag || { cmd: [] };
+    activeSizeBucket = getSizeBucket();
+    if (sizeMapping.length) window.addEventListener("resize", refreshForViewport);
+    googletag.cmd.push(() => defineAndDisplay(activeAdUnit));
 
     return () => {
+      disposed = true;
       window.removeEventListener("resize", refreshForViewport);
       window.clearTimeout(resizeTimer);
-
-      window.googletag?.cmd?.push(() => {
-        if (listenerRef.current) {
-          googletag.pubads().removeEventListener(
-            "slotRenderEnded",
-            listenerRef.current
-          );
-          listenerRef.current = null;
-        }
-        if (slotRef.current) {
-          googletag.destroySlots([slotRef.current]);
-          slotRef.current = null;
-        }
-      });
+      window.clearTimeout(fallbackTimer);
+      window.googletag?.cmd?.push(removeCurrentSlot);
     };
-  }, [slotId, adUnitPath, sizes, sizeMapping]);
+  }, [slotId, adUnitPath, fallbackAdUnitPath, sizes, sizeMapping]);
 
   return (
     <div

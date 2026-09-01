@@ -119,6 +119,7 @@ function GameAd({ name }) {
     "detail-bottom": import.meta.env.VITE_AD_BANNER_GAME_BOTTOM || "",
   };
   const adUnitPath = slots[name] || "";
+  const fallbackAdUnitPath = largeMobileSlot ? "" : import.meta.env.VITE_AD_BANNER_CATALOG_TOP || "";
   const adsEnabled = import.meta.env.VITE_ADS_ENABLED === "true";
   const gamNetworkCode = import.meta.env.VITE_GAM_NETWORK_CODE || "";
   const live = adsEnabled && Boolean(gamNetworkCode) && Boolean(adUnitPath);
@@ -163,6 +164,7 @@ function GameAd({ name }) {
       >
         <GAMAdUnit
           adUnitPath={adUnitPath}
+          fallbackAdUnitPath={fallbackAdUnitPath}
           slotId={slotIdRef.current}
           sizes={adSizes}
           sizeMapping={sizeMapping}
@@ -426,6 +428,7 @@ function InlineAd({ position }) {
       <div className="game-ad-label">Advertisement</div>
       <GAMAdUnit
         adUnitPath={adUnitPath}
+        fallbackAdUnitPath={catalogTopPath}
         slotId={slotIdRef.current}
         sizes={adSizes}
         sizeMapping={sizeMapping}

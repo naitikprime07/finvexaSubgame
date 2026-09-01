@@ -12,6 +12,7 @@ export function StickyBottomAd() {
 
   // This is the dedicated GAM unit for the bottom mobile anchor.
   const adUnitPath = import.meta.env.VITE_AD_ANCHOR || "";
+  const fallbackAdUnitPath = import.meta.env.VITE_AD_BANNER_CATALOG_BOTTOM || "";
   const slotPrefixRef = useRef("gam-mobile-anchor");
   const routeKey = location.key || location.pathname;
   const safeRouteKey = routeKey.replace(/[^a-zA-Z0-9_-]/g, "-");
@@ -67,6 +68,7 @@ export function StickyBottomAd() {
         <GAMAdUnit
           key={slotId}
           adUnitPath={adUnitPath}
+          fallbackAdUnitPath={fallbackAdUnitPath}
           slotId={slotId}
           sizes={adSizes}
           sizeMapping={sizeMapping}
